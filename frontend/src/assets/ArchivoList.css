@@ -1,0 +1,42 @@
+.archivo-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.archivo-item {
+  display: flex;
+  gap: 1rem;
+  background: var(--color-principal1);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--color-shadow2);
+}
+
+.archivo-imagen img {
+  max-width: 120px;
+  max-height: 170px;
+  object-fit: cover;
+  outline: 0.5px solid var(--resaltar);
+  border-radius: 5px;
+  margin-right: 1rem;
+  flex-shrink: 1;
+}
+
+.archivo-detalles {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.archivo-nombre {
+  margin: 0 0 0.3rem 0;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.archivo-descripcion {
+  font-style: italic;
+  color: var(--color-terciario4);
+}

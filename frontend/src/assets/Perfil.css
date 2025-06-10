@@ -1,0 +1,13 @@
+.div-perfil-izq {
+  background-color: white;
+}
+
+.perfil-container {
+  display: inline-block;
+  border: 2px solid var(--color-fondo);
+  padding: 40px;
+  background-color: var(--color-principal1);
+  /* margin: 20px;*/
+  border-radius: 8px;
+  /* box-shadow: 0 2px 8px var(--color-shadow);*/
+}

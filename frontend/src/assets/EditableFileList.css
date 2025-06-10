@@ -1,0 +1,147 @@
+/* Contenedor principal listado de archivos */
+
+.editable-file-list-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 0px solid var(--color-principal4);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Scroll interno para listado */
+.editable-file-list-scroll {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 1200px;
+  padding: 10px 15px;
+  background: var(--color-principal1);
+}
+
+/* Item individual en listado */
+.editable-file-item {
+  border: 1px solid transparent;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  outline: 1px solid var(--color-fondo);
+  cursor: pointer;
+  display: flex;
+  /*justify-content: space-between;*/
+  background: var(--color-secundario6);
+  gap: 1rem;
+  min-height: 100px;
+  align-items: flex-start;
+  /* transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  word-break: break-word;
+  position: relative;*/
+}
+
+.editable-file-item:hover {
+  box-shadow: 0 4px 12px var(--color-shadow);
+}
+
+/* Item seleccionado */
+.editable-file-item.seleccionado,
+.editable-file-item.selected-item {
+  border-color: var(--resaltar);
+  box-shadow: 0 0 8px var(--resaltar);
+}
+
+/* Detalles del archivo */
+.editable-file-details {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  word-break: break-word;
+}
+
+/* Botones a la derecha en cada item */
+.editable-file-buttons {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-principal1);
+  /*outline: 1px solid var(--color-fondo);*/
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Etiquetas categorías dentro del ítem */
+.categoria-label {
+  cursor: default;
+  user-select: none;
+  padding: 0.3rem 0.7rem;
+  border-radius: 15px;
+  border: 1px solid var(--color-terciario1);
+  font-size: 0.85rem;
+  color: var(--color-terciario1);
+  background-color: var(--color-quinto6);
+  margin-right: 0.3rem;
+  display: inline-block;
+}
+
+.file-thumbnail {
+  /* width: 120px;
+  flex-shrink: 0;*/
+}
+
+.miniatura-img {
+  width: 100%;
+  max-height: 170px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--resaltar);
+  max-width: 120px;
+}
+
+.categoria-seleccionada {
+  background-color: var(--resaltar);
+}
+.categoria-quitar {
+  background-color: var(--color-principal1);
+}
+
+.btn-agregar,
+.btn-eliminnar {
+  width: 20%;
+  margin: 0px 10px;
+}
+
+.autocomplete-lists {
+  position: absolute;
+  /* top: 100%;*/
+  left: 0;
+  right: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  background: var(--color-cuarto);
+  color: var(--color-fondo);
+  border: 1px solid var(--color-principal4);
+  border-top: none;
+  z-index: 10;
+  /* list-style: none;
+  margin: 0;
+  padding: 0;*/
+  box-shadow: 0 4px 6px var(--color-shadow2);
+  /* border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;*/
+}
+
+.container-categoria {
+  padding: 0 1%;
+}
+
+.btn-guardar,
+.btn-cancelar,
+.btn-subir,
+.btn-editar {
+  outline: 1px solid var(--color-fondo);
+}
+
+.btn-guardar:hover,
+.btn-cancelar:hover,
+.btn-subir:hover,
+.btn-editar:hover {
+  background-color: var(--color-principal4);
+}

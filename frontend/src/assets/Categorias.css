@@ -1,0 +1,119 @@
+.categorias-container {
+  background-color: var(--color-principal1);
+  border: 1px solid var(--color-fondo);
+  border-radius: 10px;
+  display: flex;
+  gap: 2rem;
+  padding: 3rem;
+  flex-wrap: wrap; /* Permite que se envíen a la siguiente línea */
+}
+.controles {
+  flex: 1 1 300px; /* crece, encoge, base de 300px */
+  min-width: 280px;
+}
+.listado {
+  flex: 1 1 300px;
+  min-width: 280px;
+}
+ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+li.no-selected,
+li.selected {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.3rem;
+  border-radius: 6px;
+  user-select: none;
+}
+
+li.no-selected {
+  outline: 1px solid var(--color-fondo);
+  background-color: var(--color-principal1);
+}
+
+li.selected {
+  background-color: var(--resaltar);
+  color: var(--color-cuarto);
+  outline: none;
+}
+
+.btn-intercambiar {
+  background-color: var(--resaltar);
+  color: var(--color-principal1);
+  margin-bottom: 1rem;
+  width: 100%;
+}
+.btn-agregar {
+  background-color: var(--resaltar);
+  color: var(--color-principal1);
+  width: 100%;
+}
+.btn-agregar:hover,
+.btn-intercambiar:hover {
+  background-color: var(--color-principal1);
+  color: var(--resaltar);
+  outline: 2px solid var(--resaltar);
+}
+
+button {
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: var(--color-fondo);
+}
+button:disabled {
+  cursor: not-allowed;
+  background-color: var(--color-principal4);
+}
+button:disabled:hover {
+  cursor: not-allowed;
+  background-color: var(--color-principal4);
+  outline: none;
+  color: var(--color-principal1);
+}
+
+input[type="text"] {
+  /*width: 100%;
+   margin-bottom: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-fondo);
+  box-sizing: border-box;*/
+}
+@media (max-width: 700px) {
+  .categorias-container {
+    flex-direction: column;
+  }
+  .controles,
+  .listado {
+    min-width: 100%;
+  }
+}
+
+.btn-eliminar {
+  background-color: var(--color-fondo);
+  color: var(--color-principal1);
+  /* float: right;*/
+}
+
+.btn-eliminar:hover {
+  background-color: var(--color-principal1);
+  color: var(--color-fondo);
+  outline: 1px solid var(--color-fondo);
+}
+
+.accion-categoria {
+  display: flex;
+  gap: 1rem; /* espacio entre cantidad y botón */
+  align-items: center;
+}
+
+.p-categoria {
+  font-style: italic;
+}

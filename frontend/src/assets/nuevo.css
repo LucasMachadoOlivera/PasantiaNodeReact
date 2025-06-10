@@ -1,0 +1,56 @@
+:root {
+  /*--color-principal: #00A9E0;*/
+  /*--color--fondo: #000000;*/
+
+  --background: #e9ecef;
+  /*--color--informacion: #184897;*/
+  /*--color--ambiental: #86bb4c;*/
+  /*--color--mecatronica: #DF2B31;*/
+  /*--color--alimentos: #DE7A27;*/
+  /*--color--innovacion: #F6CA21;*/
+
+  /*--color--fondo: #212529;*/
+  --resaltar: #00c7ff;
+  /**--categoria--seleccionada: #343a40/
+
+  /*styles*/
+  --color-fondo: #343a40; /*fondo de botones*/ /* cambiar el fondo de categorias a uno diferente de los botones*/
+  --color-principal: #f0f0f0;
+  --color-secundario: #444c56;
+  --color-terciario: #61dafb;
+  --color-cuarto: white;
+  /*usuario*/
+  --color-fondo1: #ffffff;
+  --color-principal1: #fff;
+  --color-secundario1: #ddd;
+  --color-terciario1: #007bff;
+  --color-quinto: #28a745;
+  --color-sexto: #dc3545;
+  --color-septimo: #6c757d;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  /*SubirArchivoPage*/
+  --color-fondo2: #f0f2f5;
+  --color-secundario2: #f5f5f5;
+  --color-shadow2: rgb(0 0 0 / 0.1);
+  /*SubirArchivo*/
+  --color-fondo3: #aaa;
+  --color-secundario3: #f9f9f9;
+  --color-quinto3: #333;
+  --color-sexto3: #17a2b8;
+  --color-septimo3: #117a8b;
+  --color-octavo: #999;
+  --color-shadow3: rgba(23, 162, 184, 0.5);
+  /*SearchForm*/
+  --color-principal4: #ccc;
+  --color-terciario4: #555;
+  --color-septimo4: #3c3f47;
+  /*List*/
+  --color-fondo5: #fff;
+  --color-principal5: #d0d0d0;
+  /*EditableFileList*/
+  --color-secundario6: #fafafa;
+  --color-cuarto6: #e7f1ff;
+  --color-quinto6: #e6f0ff;
+  /*Dashboard*/
+  /*ArchivoList*/
+}

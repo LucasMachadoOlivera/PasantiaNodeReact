@@ -1,0 +1,112 @@
+/*separacion en columnas*/
+.list-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/*estilo del item listado*/
+.list-item {
+  background: var(--color-fondo5);
+  padding: 1rem;
+  min-width: 300px;
+  flex: 1 1 40%;
+  display: flex;
+  align-items: flex-start;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+/*principalmente tamaño de la miniatura*/
+.list-item-image {
+  max-width: 120px;
+  max-height: 170px;
+  object-fit: cover;
+  outline: 0.5px solid var(--resaltar);
+  border-radius: 5px;
+  margin-right: 1rem;
+  flex-shrink: 1;
+}
+
+/*como mostrar los datos del archivo*/
+.list-item-details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+/*grosor del texto*/
+.list-item-details span {
+  font-weight: 500;
+}
+
+/*contenedor con los botones*/
+.list-item-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* margin-left: 1rem;
+   flex-shrink: 0;*/
+}
+
+/*botones*/
+.list-item-buttons button {
+  background-color: var(--resaltar);
+  color: var(--color-principal1);
+  border-radius: 4px;
+  /*padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;*/
+}
+
+.list-item-buttons button:hover,
+.list-item-buttons button:focus {
+  background-color: var(--color-principal1);
+  outline: 2px solid var(--resaltar);
+  color: var(--resaltar);
+}
+
+.category-badge {
+  background-color: var(--resaltar);
+  color: var(--color-principal1);
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin-right: 0.3rem;
+  /*display: inline-block;
+   user-select: none;*/
+}
+/* Responsive para pantallas pequeñas */
+@media (max-width: 1100px) {
+  .list-item {
+    flex-direction: column;
+    align-items: center;
+    /* min-width: 100%;*/
+  }
+
+  .list-item-image {
+    margin-bottom: 0.75rem;
+    margin-right: 0;
+    /* width: 100%*/
+    max-width: 60%;
+    max-height: 50%;
+    height: auto;
+  }
+
+  .list-item-buttons {
+    flex-direction: row;
+    /* margin-left: 0;*/
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+}
+
+.div-paginar {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}

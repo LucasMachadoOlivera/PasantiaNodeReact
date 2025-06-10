@@ -1,0 +1,54 @@
+.logo-izquierda {
+  align-self: flex-start; /* mueve la imagen a la izquierda */
+  width: 130px;
+  height: auto;
+}
+
+.div-header {
+  display: flex; /* 🔑 hace que los hijos se alineen en fila */
+  justify-content: flex-start; /* Alineados desde la izquierda */
+  align-items: center; /* Opcional: alineación vertical */
+  gap: 1rem; /* Espacio entre los elementos */
+}
+
+.h-header {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
+.link {
+  background-color: var(--color-principal1);
+}
+
+.link:hover {
+  background-color: var(--color-secundario);
+}
+
+/* Header */
+.header {
+  background-color: var(--color-fondo);
+  padding: 1rem;
+  color: var(--color-cuarto);
+  text-align: center;
+}
+
+.nav-links {
+  margin-top: 0.5rem;
+  align-items: center; /* 🔑 asegura alineación vertical */
+}
+
+.nav-links a {
+  color: var(--color-cuarto);
+  text-decoration: none;
+  margin: 0 1rem;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover,
+.nav-links a:focus {
+  color: var(--color-terciario);
+  outline: none;
+}

@@ -1,0 +1,45 @@
+/* General */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body,
+html,
+#root {
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Main */
+main {
+  background-color: var(--background);
+}
+.main-content {
+  flex: 1;
+  padding: 1rem;
+}
+
+/* Mensaje de error */
+.mensaje-error {
+  margin-top: 1rem;
+  color: red;
+  text-align: center;
+}
+
+button {
+  background-color: var(--color-principal1);
+  color: var(--color-secundario);
+}
+
+button:hover {
+  background-color: var(--color-principal1);
+  color: var(--color-secundario);
+}
