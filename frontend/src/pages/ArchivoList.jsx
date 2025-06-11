@@ -31,6 +31,9 @@ export default function ArchivoList({
       !selectedCategorias.some((c) => c.nombre === cat.nombre)
   );
 
+  const [selectedCompartir, setSelectedCompartir] = useState([]);
+  const [compartirParaQuitar, setCompartirParaQuitar] = useState([]);
+
   const [abiertoPrivilegio, setAbiertoPrivilegio] = useState(false);
   const [seleccionadoPrivilegio, setSeleccionadoPrivilegio] = useState(null);
   const agregarCategoria = (cat) => {
@@ -51,8 +54,26 @@ export default function ArchivoList({
 
   // Filtrar categorías para dropdown
 
-  const agregarCompartir = (cat) => {
-    setCompartirInput(cat.email);
+  const agregarCompartir = (com) => {
+    let continuar = true;
+    (selectedCompartir[0]?.UsuariosConAcceso || []).map((comp) => {
+      if (com.email === comp.email) {
+        setCompartirInput("");
+        setSeleccionadoPrivilegio(null);
+        continuar = false;
+      }
+    });
+    if (continuar) {
+      setSelectedCompartir((prev) => {
+        const yaExiste = prev.some((c) => c.id === com.id);
+        if (yaExiste) {
+          return prev;
+        }
+        setCompartirInput(com.email);
+        return [...prev, { id: com.id, nombre: com.nombre }];
+      });
+    }
+
     setCompartirDropdownVisible(false);
   };
 
@@ -127,11 +148,14 @@ export default function ArchivoList({
     setAbiertoPrivilegio(false);
   };
 
-  const iniciarEdicion = (archivo) => {
+  const iniciarEdicion = async (archivo) => {
     setEditandoId(archivo.id);
     const nuevaFecha = new Date(archivo.fecha).toISOString().slice(0, 10);
     setEditData({ ...archivo, fecha: nuevaFecha });
 
+    const acceso = await axios.get(`/api/files/conAcceso/${archivo.id}`);
+    console.log("ACCESO", acceso.data);
+    setSelectedCompartir(acceso.data);
     archivo.Categoria.map((cat) => {
       const clave = {
         id: cat.id,
@@ -145,7 +169,8 @@ export default function ArchivoList({
     );
 
     //editData.fecha = formato;
-    setCategoriasParaQuitar([]); // reset categorias para quitar
+    setCategoriasParaQuitar([]);
+    setCompartirParaQuitar([]);
   };
 
   const cancelarEdicion = () => {
@@ -153,6 +178,7 @@ export default function ArchivoList({
     setEditandoId(null);
     setEditData({});
     setCategoriasParaQuitar([]);
+    setCompartirParaQuitar([]);
   };
 
   const guardarEdicion = async () => {
@@ -161,7 +187,11 @@ export default function ArchivoList({
 
     editData.fecha = fechaConHora;
 
-    const archivoActualizado = { ...editData, Categoria: selectedCategorias };
+    const archivoActualizado = {
+      ...editData,
+      Categoria: selectedCategorias,
+      UsuariosConAcceso: selectedCompartir[0].UsuariosConAcceso,
+    };
 
     try {
       await axios.post("/api/files/update", archivoActualizado);
@@ -184,6 +214,21 @@ export default function ArchivoList({
     setSelectedCategorias(
       selectedCategorias.filter((c) => c.nombre !== cat.nombre)
     );
+  };
+
+  const toggleCompartirParaQuitar = (com) => {
+    setSelectedCompartir((prev) =>
+      prev.map((item) => ({
+        ...item,
+        UsuariosConAcceso: item.UsuariosConAcceso?.filter(
+          (r) => r.nombre !== com.nombre
+        ),
+      }))
+    );
+    /*
+    setSelectedCompartir(
+      selectedCompartir.filter((c) => c.nombre !== com.nombre)
+    );*/
   };
 
   const eliminarArchivo = async (id) => {
@@ -277,106 +322,142 @@ export default function ArchivoList({
                           />
                         </div>
                       </div>
-                      <div>
-                        <p>Compartir</p>
-                        {/* Compartir archivo */}
+                      <div className="compartir-item">
+                        <div>
+                          <p>Compartir</p>
+                          {/* Compartir archivo */}
+                          <div
+                            className="autocomplete-wrapper"
+                            onFocus={() => setCompartirDropdownVisible(true)}
+                            onBlur={() =>
+                              setTimeout(
+                                () => setCompartirDropdownVisible(false),
+                                150
+                              )
+                            }
+                          >
+                            <input
+                              type="text"
+                              placeholder="Escribir email"
+                              value={compartirInput}
+                              onChange={(e) =>
+                                setCompartirInput(e.target.value)
+                              }
+                              onFocus={() => setCompartirDropdownVisible(true)}
+                              className="input-text"
+                              name="compartir"
+                              autoComplete="off"
+                            />
+                            {compartirDropdownVisible && (
+                              <ul className="autocomplete-list" tabIndex={-1}>
+                                {comparte.length > 0 ? (
+                                  comparte.map((com) => (
+                                    <li
+                                      key={com.id}
+                                      className="autocomplete-item"
+                                      tabIndex={0}
+                                      onClick={() => agregarCompartir(com)}
+                                      onKeyDown={(e) => {
+                                        if (
+                                          e.key === "Enter" ||
+                                          e.key === " "
+                                        ) {
+                                          e.preventDefault();
+                                          agregarCompartir(com);
+                                        }
+                                      }}
+                                    >
+                                      {com.email}
+                                    </li>
+                                  ))
+                                ) : (
+                                  <></>
+                                )}
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+
+                        <p>Privilegio</p>
+                        {/* Privilegio archivo */}
                         <div
-                          className="autocomplete-wrapper"
-                          onFocus={() => setCompartirDropdownVisible(true)}
+                          className="dropdown-wrapper"
+                          tabIndex={0}
                           onBlur={() =>
-                            setTimeout(
-                              () => setCompartirDropdownVisible(false),
-                              150
-                            )
+                            setTimeout(() => setAbiertoPrivilegio(false), 150)
                           }
                         >
-                          <input
-                            type="text"
-                            placeholder="Escribir email"
-                            value={compartirInput}
-                            onChange={(e) => setCompartirInput(e.target.value)}
-                            onFocus={() => setCompartirDropdownVisible(true)}
-                            className="input-text"
-                            name="compartir"
-                            autoComplete="off"
-                          />
-                          {compartirDropdownVisible && (
-                            <ul className="autocomplete-list" tabIndex={-1}>
-                              {comparte.length > 0 ? (
-                                comparte.map((com) => (
-                                  <li
-                                    key={com.id}
-                                    className="autocomplete-item"
-                                    tabIndex={0}
-                                    onClick={() => agregarCompartir(com)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        agregarCompartir(com);
-                                      }
-                                    }}
-                                  >
-                                    {com.email}
-                                  </li>
-                                ))
-                              ) : (
-                                <></>
-                              )}
+                          <div
+                            className="dropdown-display"
+                            onClick={() => setAbiertoPrivilegio(!abierto)}
+                          >
+                            {seleccionadoPrivilegio
+                              ? seleccionadoPrivilegio.nombre
+                              : "Seleccionar..."}
+                          </div>
+
+                          {abiertoPrivilegio && (
+                            <ul className="dropdown-list">
+                              {opcionesPrivilegio.map((op) => (
+                                <li
+                                  key={op.id}
+                                  className="dropdown-item"
+                                  onMouseDown={() => seleccionarPrivilegio(op)}
+                                >
+                                  {op.nombre}
+                                </li>
+                              ))}
                             </ul>
+                          )}
+
+                          {/* Hidden input para enviar valor si es parte de un form */}
+                          <input
+                            type="hidden"
+                            name="categoria"
+                            value={seleccionado?.id || ""}
+                          />
+                        </div>
+                        <button
+                          className="btn-compartir"
+                          onClick={() => {
+                            setCompartirInput("");
+                            setSeleccionadoPrivilegio(null);
+                            compartir(
+                              comparte,
+                              compartirInput,
+                              editData.id,
+                              seleccionadoPrivilegio
+                            );
+                          }}
+                        >
+                          Compartir
+                        </button>
+                        <br />
+                        <br />
+                        <div className="editable-file-categorias">
+                          {(selectedCompartir[0]?.UsuariosConAcceso || []).map(
+                            (com) => {
+                              const marcadaParaQuitarCompartir =
+                                compartirParaQuitar.includes(com);
+                              console.log("datoqqq", com);
+                              return (
+                                <span
+                                  key={com.nombre}
+                                  className={`categoria-label ${
+                                    marcadaParaQuitarCompartir
+                                      ? "categoria-quitar"
+                                      : "categoria-seleccionada"
+                                  }`}
+                                  onClick={() => toggleCompartirParaQuitar(com)}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  {com.email} : {com.File_usuario.permiso}
+                                </span>
+                              );
+                            }
                           )}
                         </div>
                       </div>
-
-                      {/* Privilegio archivo */}
-                      <div
-                        className="dropdown-wrapper"
-                        tabIndex={0}
-                        onBlur={() =>
-                          setTimeout(() => setAbiertoPrivilegio(false), 150)
-                        }
-                      >
-                        <div
-                          className="dropdown-display"
-                          onClick={() => setAbiertoPrivilegio(!abierto)}
-                        >
-                          {seleccionadoPrivilegio
-                            ? seleccionadoPrivilegio.nombre
-                            : "Seleccionar..."}
-                        </div>
-
-                        {abiertoPrivilegio && (
-                          <ul className="dropdown-list">
-                            {opcionesPrivilegio.map((op) => (
-                              <li
-                                key={op.id}
-                                className="dropdown-item"
-                                onMouseDown={() => seleccionarPrivilegio(op)}
-                              >
-                                {op.nombre}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-
-                        {/* Hidden input para enviar valor si es parte de un form */}
-                        <input
-                          type="hidden"
-                          name="categoria"
-                          value={seleccionado?.id || ""}
-                        />
-                      </div>
-                      <button
-                        onClick={() =>
-                          compartir(
-                            comparte,
-                            compartirInput,
-                            editData.id,
-                            seleccionadoPrivilegio
-                          )
-                        }
-                      >
-                        Compartir
-                      </button>
                       <p>Descripcion</p>
                       <textarea
                         name="descripcion"
@@ -434,6 +515,7 @@ export default function ArchivoList({
                           </ul>
                         )}
                       </div>
+
                       <div className="editable-file-categorias">
                         {(selectedCategorias || []).map((cat) => {
                           const marcadaParaQuitar =
@@ -485,6 +567,25 @@ export default function ArchivoList({
                         ) : (
                           <>
                             <span className="no-categories">Sin categoría</span>
+                          </>
+                        )}
+                      </p>
+                      <p>
+                        <span>
+                          <strong>
+                            Compartido: <strong />
+                          </strong>
+                        </span>
+                        {archivo.UsuariosConAcceso &&
+                        archivo.UsuariosConAcceso.length > 0 ? (
+                          archivo.UsuariosConAcceso.map((com) => (
+                            <span key={com.id} className="compartir-badge">
+                              {com.email} : {com.File_usuario.permiso}
+                            </span>
+                          ))
+                        ) : (
+                          <>
+                            <span className="no-categories">No disponible</span>
                           </>
                         )}
                       </p>

@@ -3,7 +3,7 @@ const session = require("express-session");
 const db = require("./models");
 const path = require("path");
 const cors = require("cors");
-require("./cron/cron");
+//require("./cron/cron");
 const passport = require("./passport/passport");
 
 const app = express();
@@ -74,7 +74,6 @@ const imageFolderPath = path.join(__dirname, "uploads");
 const miniatureFolderPath = path.join(__dirname, "thumbnails");
 
 app.use("/api", (req, res, next) => {
-  // Por ejemplo: agregar datos de sesión a la request
   if (req.isAuthenticated()) {
     req.usuarioId = req.user.id; // Agrega el ID del usuario a la request
     req.usuarioNombre = req.user.nombre;
@@ -85,7 +84,7 @@ app.use("/api", (req, res, next) => {
       .json({ message: "No autenticado. Redirigiendo a login." });
   }
 
-  next(); // Continúa con el siguiente middleware: productosRouter
+  next(); // Continúa con el siguiente
 });
 
 app.use("/uploads/:id", async (req, res) => {

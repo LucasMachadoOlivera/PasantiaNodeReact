@@ -224,6 +224,10 @@ router.get("/perfil", async (req, res) => {
       include: [
         {
           model: db.Usuario,
+          as: "UsuariosConAcceso",
+        },
+        {
+          model: db.Usuario,
         },
 
         {
@@ -247,6 +251,10 @@ router.get("/todo", async (req, res) => {
     if (permitido) {
       const files = await db.File.findAll({
         include: [
+          {
+            model: db.Usuario,
+            as: "UsuariosConAcceso",
+          },
           {
             model: db.Usuario,
           },
@@ -286,7 +294,32 @@ router.get("/perfil-compartido", async (req, res) => {
         },
       ],
     });
-    res.json(files);
+
+    ids = [];
+
+    for (const file of files) {
+      ids.push(file.id);
+    }
+    const files1 = await db.File.findAll({
+      where: {
+        id: ids,
+      },
+      include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+        },
+        {
+          model: db.Usuario,
+        },
+
+        {
+          model: db.Categoria,
+        },
+      ],
+    });
+
+    res.json(files1);
   } catch (error) {
     console.error("Error al obtener files:", error);
     res.status(500).json({ error: "Error al listar files" });
@@ -318,6 +351,29 @@ router.get("/revisando", async (req, res) => {
   }
 });
 
+//Listar los archivos que el usuario esta subiendo
+router.get("/conAcceso/:id", async (req, res) => {
+  const usuario_id = req.usuarioId;
+  try {
+    const id = req.params.id;
+    const where = {};
+    where.id = id;
+    const files = await db.File.findAll({
+      where: where,
+      include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+        },
+      ],
+    });
+    res.json(files);
+  } catch (error) {
+    console.error("Error al obtener archivos:", error);
+    res.status(500).json({ error: "Error al listar archivos" });
+  }
+});
+
 //Actualizar un archivo
 router.post("/update", upload.none(), async (req, res) => {
   try {
@@ -327,6 +383,7 @@ router.post("/update", upload.none(), async (req, res) => {
     if (permitido) {
       const { id, nombre, descripcion, fecha, estado } = req.body;
       let categorias = req.body.Categoria;
+      let conAcceso = req.body.UsuariosConAcceso;
 
       try {
         const filas = await db.File.findByPk(id);
@@ -351,6 +408,20 @@ router.post("/update", upload.none(), async (req, res) => {
         }
 
         const categoriasId = categorias.map((a) => a.id);
+        await filas.setCategoria(categoriasId);
+
+        if (typeof conAcceso === "string") {
+          try {
+            conAcceso = JSON.parse(conAcceso);
+          } catch (e) {
+            return res
+              .status(400)
+              .json({ mensaje: "Relaciones para compartir inválidas" });
+          }
+        }
+
+        const conAccesoIdUser = conAcceso.map((a) => a.id);
+        const conAccesoIdPrivilegio = conAcceso.map((a) => a.id);
         await filas.setCategoria(categoriasId);
       } catch (error) {
         console.error("Error al actualizar:", error);
@@ -461,7 +532,6 @@ router.post("/filtrado/:origen", async (req, res) => {
   const include = [];
   const includeCompartido = [];
 
-  console.log("1");
   try {
     if (tipo) {
       where.tipo = { [Op.like]: `%${tipo}%` };
@@ -484,9 +554,7 @@ router.post("/filtrado/:origen", async (req, res) => {
         [Op.lte]: fecha_fin,
       };
     }
-    console.log("2");
 
-    console.log("3");
     let ids = [];
     let ids1 = [];
 
@@ -529,7 +597,6 @@ router.post("/filtrado/:origen", async (req, res) => {
       });
     }
 
-    console.log("4");
     const categoriasIds = categoriasArray.map((id) => parseInt(id));
     if (categoriasIds.length === 0) {
       let files;
@@ -543,7 +610,7 @@ router.post("/filtrado/:origen", async (req, res) => {
         ],
         where: where,
       });
-      console.log("5");
+
       ids1 = [];
       for (const file of files) {
         ids1.push(file.id);
@@ -556,10 +623,10 @@ router.post("/filtrado/:origen", async (req, res) => {
         estado = true;
       }
     }
-    console.log("6");
+
     for (const categoria of categoriasIds) {
       let files;
-      console.log("7");
+
       if (categorias) {
         files = await db.File.findAll({
           where: where,
@@ -583,14 +650,13 @@ router.post("/filtrado/:origen", async (req, res) => {
             },
           ],
         });
-        console.log("8");
       }
       ids1 = [];
 
       for (const file of files) {
         ids1.push(file.id);
       }
-      console.log("9");
+
       if (estado) {
         ids = ids.filter((num) => ids1.includes(num));
       } else {
@@ -598,12 +664,16 @@ router.post("/filtrado/:origen", async (req, res) => {
         estado = true;
       }
     }
-    console.log("FILTRADO 9", ids);
+
     const files1 = await db.File.findAll({
       where: {
         id: ids,
       },
       include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+        },
         {
           model: db.Usuario,
         },
@@ -613,7 +683,7 @@ router.post("/filtrado/:origen", async (req, res) => {
         },
       ],
     });
-    console.log("FILTRADO 10", files1);
+
     res.json(files1);
   } catch (error) {
     console.error("Error al obtener files:", error);

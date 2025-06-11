@@ -40,3 +40,29 @@
   font-style: italic;
   color: var(--color-terciario4);
 }
+
+.compartir-item {
+  padding: 15px;
+  margin: 15px;
+  border: 1px solid var(--color-fondo);
+}
+
+.btn-compartir {
+  border: 1px solid var(--color-fondo);
+}
+
+.btn-compartir:hover {
+  background-color: var(--resaltar);
+  color: var(--color-principal1);
+}
+
+.compartir-badge {
+  background-color: var(--color-fondo);
+  color: var(--color-principal1);
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin-right: 0.3rem;
+  /*display: inline-block;
+   user-select: none;*/
+}

@@ -178,7 +178,7 @@ export default function Dashboard() {
 
     try {
       const res = await axios.post("/api/files/filtrado/personal", filtro);
-
+      console.log("archivo personales", res.data);
       setArchivosFiltradosPersonal(res.data);
     } catch (err) {
       console.error("Error en la búsqueda:", err);
@@ -226,7 +226,7 @@ export default function Dashboard() {
 
     try {
       const res = await axios.post("/api/files/filtrado/compartido", filtro);
-
+      console.log("archivo compartido", res.data);
       setArchivosFiltradosCompartido(res.data);
     } catch (err) {
       console.error("Error en la búsqueda:", err);
