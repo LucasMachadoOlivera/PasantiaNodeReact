@@ -18,6 +18,7 @@ export default function ArchivoList({
   const [categoriasParaQuitar, setCategoriasParaQuitar] = useState([]);
   const [abierto, setAbierto] = useState(false);
   const [seleccionado, setSeleccionado] = useState(null);
+  const [userSeleccionado, setUserSeleccionado] = useState(null);
 
   const [categoriaInput, setCategoriaInput] = useState("");
   const [selectedCategorias, setSelectedCategorias] = useState([]);
@@ -52,25 +53,79 @@ export default function ArchivoList({
   const [compartirDropdownVisible, setCompartirDropdownVisible] =
     useState(false);
 
+  const [mensaje, setMensaje] = useState("");
+  const [tipoMensaje, setTipoMensaje] = useState(""); // 'error' o 'exito'
+
+  const opcionesPrivilegio = [
+    { id: "0", nombre: "Visualizador" },
+    { id: "1", nombre: "Editor" },
+  ];
+
+  const [usarOpcionesPrivilegio, setUsarOpcionesPrivilegio] =
+    useState(opcionesPrivilegio); // 'error' o 'exito'
+
+  // Limpiar mensaje después de 3 segundos
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => {
+        setMensaje("");
+        setTipoMensaje("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensaje]);
+
+  useEffect(() => {
+    buscarCompartir();
+  }, [compartirInput]);
+
   // Filtrar categorías para dropdown
 
+  const actualizarCompartiendo = async () => {
+    console.log("mostrar selectec", selectedCompartir);
+    const fileId = selectedCompartir[0]?.id;
+    const compartido = await axios.get(`/api/files/compartiendo/${fileId}`);
+    console.log("devolvio", compartido.data);
+    const compartidoSeleccionado = await selectedCompartir.map((compartir) => ({
+      ...compartir,
+      UsuariosConAcceso: compartido.data.UsuariosConAcceso, // nuevo valor para el campo permiso
+    }));
+    setSelectedCompartir(compartidoSeleccionado);
+    console.log("devueltoConAcceso", compartidoSeleccionado);
+  };
+
   const agregarCompartir = (com) => {
+    console.log("ejecutando", com);
     let continuar = true;
+
     (selectedCompartir[0]?.UsuariosConAcceso || []).map((comp) => {
-      if (com.email === comp.email) {
-        setCompartirInput("");
+      if (!continuar) return;
+      if (com === comp.email) {
+        setUsarOpcionesPrivilegio(
+          opcionesPrivilegio.filter(
+            (item) =>
+              item.nombre !==
+              selectedCompartir[0].UsuariosConAcceso[0].File_usuario.permiso
+          )
+        );
+        setCompartirInput(com);
         setSeleccionadoPrivilegio(null);
         continuar = false;
+      } else {
+        console.log("resetear");
+        setUsarOpcionesPrivilegio(opcionesPrivilegio);
       }
     });
     if (continuar) {
+      console.log("diferentes");
       setSelectedCompartir((prev) => {
         const yaExiste = prev.some((c) => c.id === com.id);
         if (yaExiste) {
           return prev;
         }
-        setCompartirInput(com.email);
-        return [...prev, { id: com.id, nombre: com.nombre }];
+
+        setCompartirInput(com);
+        return prev;
       });
     }
 
@@ -78,22 +133,32 @@ export default function ArchivoList({
   };
 
   const buscarCompartir = async () => {
+    setUserSeleccionado(null);
     try {
-      const email = await axios.get(`/api/usuarios/buscar/${compartirInput}`);
-
-      if (email.data.length > 0 && email.data.length <= 3) {
-        setComparte(email.data);
+      if (compartirInput) {
+        const email = await axios.get(`/api/usuarios/buscar/${compartirInput}`);
+        console.log("email devuelta", email.data);
+        if (email.data.length > 0 && email.data.length <= 3) {
+          console.log("entro");
+          setUserSeleccionado(
+            email.data.filter((item) => item.email === compartirInput)
+          );
+          setComparte(
+            email.data.filter((item) => item.email !== compartirInput)
+          );
+          console.log("orign", comparte);
+        } else {
+          console.log("entro1");
+          setComparte([]);
+        }
       } else {
+        console.log("entro2");
         setComparte([]);
       }
     } catch (error) {
       console.log(error);
     }
   };
-
-  useEffect(() => {
-    buscarCompartir();
-  }, [compartirInput]);
 
   const urlImagen = (img) => {
     return `http://localhost:3000/${img}`;
@@ -126,10 +191,6 @@ export default function ArchivoList({
     { id: "1", nombre: "Privado" },
   ];
 
-  const opcionesPrivilegio = [
-    { id: "0", nombre: "Visualizador" },
-    { id: "1", nombre: "Editor" },
-  ];
   const seleccionar = (opcion) => {
     const estado = opcion.nombre;
 
@@ -215,20 +276,33 @@ export default function ArchivoList({
       selectedCategorias.filter((c) => c.nombre !== cat.nombre)
     );
   };
+  let clickTimer = null;
 
-  const toggleCompartirParaQuitar = (com) => {
-    setSelectedCompartir((prev) =>
-      prev.map((item) => ({
-        ...item,
-        UsuariosConAcceso: item.UsuariosConAcceso?.filter(
-          (r) => r.nombre !== com.nombre
-        ),
-      }))
-    );
-    /*
-    setSelectedCompartir(
-      selectedCompartir.filter((c) => c.nombre !== com.nombre)
-    );*/
+  const toggleCompartirParaQuitar = async (com) => {
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+      console.log("doble click dentro de 5 segundos");
+
+      const datos = com.File_usuario;
+      console.log("datosinf");
+      const compartido = await axios.get(
+        `/api/files/borrar/${datos.usuario_id}/${datos.file_id}`
+      );
+      console.log("devolvio", compartido.data);
+      const compartidoSeleccionado = await selectedCompartir.map(
+        (compartir) => ({
+          ...compartir,
+          UsuariosConAcceso: compartido.data.UsuariosConAcceso, // nuevo valor para el campo permiso
+        })
+      );
+      setSelectedCompartir(compartidoSeleccionado);
+    } else {
+      clickTimer = setTimeout(() => {
+        clickTimer = null;
+        console.log("tiempo expirado");
+      }, 5000);
+    }
   };
 
   const eliminarArchivo = async (id) => {
@@ -250,6 +324,9 @@ export default function ArchivoList({
             const isEditing = editandoId === archivo.id;
             const hoy = new Date();
             const formato = hoy.toISOString().split("T")[0];
+            // console.log("mostrar archivo", proposito);
+            // console.log("mostrar archivo", archivo);
+
             return (
               <div key={archivo.id} className="archivo-item">
                 <div className="archivo-imagen">
@@ -356,14 +433,16 @@ export default function ArchivoList({
                                       key={com.id}
                                       className="autocomplete-item"
                                       tabIndex={0}
-                                      onClick={() => agregarCompartir(com)}
+                                      onClick={() =>
+                                        agregarCompartir(com.email)
+                                      }
                                       onKeyDown={(e) => {
                                         if (
                                           e.key === "Enter" ||
                                           e.key === " "
                                         ) {
                                           e.preventDefault();
-                                          agregarCompartir(com);
+                                          agregarCompartir(com.email);
                                         }
                                       }}
                                     >
@@ -398,7 +477,7 @@ export default function ArchivoList({
 
                           {abiertoPrivilegio && (
                             <ul className="dropdown-list">
-                              {opcionesPrivilegio.map((op) => (
+                              {usarOpcionesPrivilegio.map((op) => (
                                 <li
                                   key={op.id}
                                   className="dropdown-item"
@@ -419,15 +498,20 @@ export default function ArchivoList({
                         </div>
                         <button
                           className="btn-compartir"
-                          onClick={() => {
-                            setCompartirInput("");
-                            setSeleccionadoPrivilegio(null);
-                            compartir(
-                              comparte,
-                              compartirInput,
-                              editData.id,
-                              seleccionadoPrivilegio
-                            );
+                          onClick={async () => {
+                            try {
+                              setCompartirInput("");
+                              setSeleccionadoPrivilegio(null);
+                              await compartir(
+                                userSeleccionado,
+                                compartirInput,
+                                editData.id,
+                                seleccionadoPrivilegio
+                              );
+                              await actualizarCompartiendo();
+                            } catch (error) {
+                              console.error(error);
+                            }
                           }}
                         >
                           Compartir
@@ -439,7 +523,8 @@ export default function ArchivoList({
                             (com) => {
                               const marcadaParaQuitarCompartir =
                                 compartirParaQuitar.includes(com);
-                              console.log("datoqqq", com);
+                              const emailPermiso = `${com.email} ${com.File_usuario.permiso}`;
+
                               return (
                                 <span
                                   key={com.nombre}
@@ -451,14 +536,14 @@ export default function ArchivoList({
                                   onClick={() => toggleCompartirParaQuitar(com)}
                                   style={{ cursor: "pointer" }}
                                 >
-                                  {com.email} : {com.File_usuario.permiso}
+                                  {emailPermiso}
                                 </span>
                               );
                             }
                           )}
                         </div>
                       </div>
-                      <p>Descripcion</p>
+                      <p>Descripción</p>
                       <textarea
                         name="descripcion"
                         value={editData.descripcion}
@@ -555,7 +640,7 @@ export default function ArchivoList({
                       <p>
                         <span>
                           <strong>
-                            Categorias: <strong />
+                            Categorías: <strong />
                           </strong>
                         </span>
                         {archivo.Categoria && archivo.Categoria.length > 0 ? (
@@ -580,7 +665,7 @@ export default function ArchivoList({
                         archivo.UsuariosConAcceso.length > 0 ? (
                           archivo.UsuariosConAcceso.map((com) => (
                             <span key={com.id} className="compartir-badge">
-                              {com.email} : {com.File_usuario.permiso}
+                              {`${com.email}:${com.File_usuario.permiso}`}
                             </span>
                           ))
                         ) : (
@@ -657,6 +742,15 @@ export default function ArchivoList({
               </div>
             );
           })}
+        </div>
+      )}
+      {mensaje && (
+        <div
+          className={`mensaje-pop ${
+            tipoMensaje === "error" ? "mensaje-error" : "mensaje-exito"
+          }`}
+        >
+          {mensaje}
         </div>
       )}
     </>

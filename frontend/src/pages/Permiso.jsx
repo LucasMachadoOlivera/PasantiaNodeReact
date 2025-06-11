@@ -145,6 +145,51 @@ export default function Categorias() {
                 ))}
               </tbody>
             </table>
+            <br />
+            <div>
+              <p>
+                En la pestaña Perfil , en la sección de permisos, a la
+                izquierda, son afectados por:
+              </p>
+              <br />
+              <p>
+                Vercategoria, Agcategoria, Edcategoria, Elcategoria: Para que
+                aparezca la sección de permisos se necesita al menos
+                Vercategoria, y al tenerla, si se tiene Agcategoria se pueden
+                agregar categorías; con Edcategoría se pueden intercambiar las
+                categorías y Elcategoria para eliminar las categorías.
+              </p>
+              <br />
+              <p>
+                Verarchivo, Edarchivo, Elarchivo: Para que aparezca la sección
+                de permisos se necesita al menos Verarchivo para ver todos los
+                archivos en el sistema, y al tenerlo, si se tiene Edarchivo se
+                pueden editar todos los archivos, y Elarchivo para poder
+                eliminar todos los archivos.
+              </p>
+              <br />
+              <p>
+                Verusuario, Agusuario, Edusuario, Elusuario: Para que aparezca
+                la sección de permisos se necesita al menos Verusuario para ver
+                todos los usuarios, y al tenerlo, si se tiene Agusuario se
+                pueden agregar usuarios, con Edusuario se pueden editar todos
+                los usuarios y Elusuario para poder eliminar cualquier usuario.
+              </p>
+              <br />
+              <p>Registrar: para poder generar un nuevo usuario.</p>
+              <br />
+              <p>
+                Resusuario: para poder resetear la contraseña de cualquier
+                usuario.
+              </p>
+              <br />
+              <p>
+                Verpermiso, Agpermiso, Edpermiso: Verpermiso para poder
+                visualizar la tabla de arriba, y al ya tenerlo, si se tiene
+                Agpermiso para agregar nuevos permisos, Edpermiso para editar
+                permisos.
+              </p>
+            </div>
           </div>
         )}
       </div>

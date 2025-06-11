@@ -87,13 +87,13 @@ async function seedDatabase() {
   }
 
   const existing1 = await db.Usuario.findOne({
-    where: { email: "lucasmachado123456889@gmail.com" },
+    where: { email: "lucas.machado@estudiantes.utec.edu.uy" },
   });
   if (!existing1) {
     const hashedPassword1 = await bcrypt.hash("usuario123", 10);
     await db.Usuario.create({
       nombre: "Usuario",
-      email: "lucasmachado123456889@gmail.com",
+      email: "lucas.machado@estudiantes.utec.edu.uy",
       contraseña: hashedPassword1,
       permiso_id: 1,
     });
@@ -146,10 +146,11 @@ async function seedDatabase() {
     usuario_id: 1,
   });
   const user1 = await db.Usuario.findByPk(2);
+
   await user1.addFilesCompartidos(file1, {
     through: { permiso: "Editor" },
   });
-
+  console.log("agregar addFilesCompartidos2");
   const file2 = await db.File.create({
     miniatura: path.join("uploads", "descarga (2)-1747261105161.jpg"),
     tipo: "jpg",

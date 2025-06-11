@@ -40,6 +40,7 @@ export default function Dashboard() {
   }, [navigate]);
 
   const actualizarPerfil = async (dato) => {
+    console.log("dato", usuario);
     await axios.put(`/api/usuarios/${usuario.id}`, dato);
     setNombre({ nombre: "" });
     setContraseña({ contraseña: "" });

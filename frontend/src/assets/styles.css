@@ -34,6 +34,12 @@ main {
   text-align: center;
 }
 
+.mensaje-exito {
+  margin-top: 1rem;
+  color: green;
+  text-align: center;
+}
+
 button {
   background-color: var(--color-principal1);
   color: var(--color-secundario);

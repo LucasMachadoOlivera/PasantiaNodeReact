@@ -55,6 +55,20 @@ export default function Dashboard() {
 
   const [mediaUrl, setMediaUrl] = useState(null);
 
+  const [mensaje, setMensaje] = useState("");
+  const [tipoMensaje, setTipoMensaje] = useState(""); // 'error' o 'exito'
+
+  // Limpiar mensaje después de 3 segundos
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => {
+        setMensaje("");
+        setTipoMensaje("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensaje]);
+
   const abrirMedia = (url) => {
     setMediaUrl(url);
   };
@@ -109,13 +123,26 @@ export default function Dashboard() {
 
   const actualizarCompartir = async (user, userEmail, file, permiso) => {
     try {
-      if (user[0].email === userEmail) {
+      console.log("per", user);
+      console.log("per", userEmail);
+      console.log("per", permiso);
+      if (user[0] && user[0].email === userEmail && permiso) {
+        console.log("1");
         await axios.put(
           `/api/usuarios/archivo/${user[0].id}/${file}/${permiso.nombre}`
         );
+        console.log("2");
+        setMensaje("Se compartio correctamente"); // Mostrar un mensaje de error
+      } else {
+        console.log("3");
+        throw new Error("Email o Privilegio incorrecto");
       }
     } catch (error) {
-      console.log(error);
+      console.log("4");
+      setMensaje("Invalido. Comprobar Email y Privilegio"); // Mostrar un mensaje de error
+      setTipoMensaje("error");
+      console.error(error);
+      //throw new Error("Email o Privilegio incorrecto");
     }
   };
 
@@ -437,6 +464,15 @@ export default function Dashboard() {
       </div>
       {/* Mostrar overlay si hay URL */}
       {mediaUrl && <MediaOverlay url={mediaUrl} onClose={cerrarMedia} />}
+      {mensaje && (
+        <div
+          className={`mensaje-pop ${
+            tipoMensaje === "error" ? "mensaje-error" : "mensaje-exito"
+          }`}
+        >
+          {mensaje}
+        </div>
+      )}
     </div>
   );
 }

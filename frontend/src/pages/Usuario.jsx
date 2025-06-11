@@ -76,8 +76,6 @@ export default function Usuario(usuario) {
   };
 
   const handleSeleccionar = (usuario) => {
-    listarRegistros;
-
     setUsuarioSeleccionado(usuario);
     setModoEdicion(false);
     const valor = rol.find((ro) => ro.id == usuario.Permiso.id);
@@ -87,6 +85,7 @@ export default function Usuario(usuario) {
       nombre: usuario.nombre,
       rol: usuario.Permiso.id,
     });
+    console.log("datosUSURAIO", usuario);
     listarRegistros(usuario.id);
   };
 
@@ -122,7 +121,8 @@ export default function Usuario(usuario) {
 
   const handleResetearPassword = async () => {
     if (usuarioSeleccionado) {
-      await axios.post(`/api/registros/`, usuarioSeleccionado);
+      console.log("datosuser", usuarioSeleccionado);
+      await axios.post(`/api/email/update`, usuarioSeleccionado);
       alert(
         `Se ha enviado un enlace para resetear la contraseña a: ${usuarioSeleccionado.email}`
       );

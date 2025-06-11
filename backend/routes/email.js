@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../models");
 const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
 
 async function obtenerPermisos(id) {
   try {

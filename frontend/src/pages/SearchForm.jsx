@@ -14,6 +14,9 @@ export default function SearchForm({
   const [abierto, setAbierto] = useState(false);
   const [seleccionado, setSeleccionado] = useState(null);
 
+  const hoy = new Date();
+  const formato = hoy.toISOString().split("T")[0];
+
   // Filtrar categorías para dropdown
   const categoriasFiltradas = categorias.filter(
     (cat) =>
@@ -203,7 +206,7 @@ export default function SearchForm({
               type="date"
               id="fechaDesde"
               value={filtros.fecha_inicio}
-              max={filtros.fecha_fin}
+              max={filtros.fecha_fin || formato}
               onChange={(e) =>
                 setFiltros({ ...filtros, fecha_inicio: e.target.value })
               }
@@ -216,6 +219,7 @@ export default function SearchForm({
               id="fechaHasta"
               value={filtros.fecha_fin}
               min={filtros.fecha_inicio}
+              max={formato}
               onChange={(e) =>
                 setFiltros({ ...filtros, fecha_fin: e.target.value })
               }

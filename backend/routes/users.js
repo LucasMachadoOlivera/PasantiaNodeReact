@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../models");
 const { Op } = require("sequelize");
+const bcrypt = require("bcrypt");
 
 async function obtenerPermisos(id) {
   try {
@@ -23,6 +24,7 @@ async function obtenerPermisos(id) {
 //Listar un usuario segun email
 router.get("/buscar/:email", async (req, res) => {
   try {
+    let indiceEliminar = -1;
     const email = req.params.email;
 
     const where = {};
@@ -32,17 +34,18 @@ router.get("/buscar/:email", async (req, res) => {
     }
 
     const usuarios = await db.Usuario.findAll({
+      limit: 3,
       where: where,
     });
-
-    const indiceEliminar = usuarios.findIndex(
+    console.log("usuarios obtenidos", usuarios);
+    indiceEliminar = usuarios.findIndex(
       (user) => user.email === req.usuarioEmail
     );
-
+    console.log("indice", indiceEliminar);
     if (indiceEliminar !== -1) {
       usuarios.splice(indiceEliminar, 1);
     }
-
+    console.log("usuarios cambiados", usuarios);
     res.json(usuarios);
   } catch (error) {
     res.status(500).json({ error: "No se pudo obtener el usuario" });
@@ -113,6 +116,7 @@ router.delete("/:id", async (req, res) => {
 //Actualizar relacion usuario con archivo
 router.put("/archivo/:user/:file/:permiso", async (req, res) => {
   try {
+    console.log("qwer");
     const permisos = await obtenerPermisos(req.usuarioId);
 
     const permitido = permisos.edusuario;
@@ -163,8 +167,10 @@ router.put("/archivo/:user/:file/:permiso", async (req, res) => {
 //Actualizar un usuario por ID
 router.put("/:id", async (req, res) => {
   try {
+    console.log("asfdf");
     console.log("otro no ingresa");
-    const permisos = await obtenerPermisos(req.usuarioId);
+    const usuario_id = req.usuarioId;
+    const permisos = await obtenerPermisos(usuario_id);
     const permitido = permisos.edusuario;
     if (permitido) {
       const { nombre, email, contraseña, rol } = req.body;
@@ -181,11 +187,12 @@ router.put("/:id", async (req, res) => {
       if (email) {
         usuario.email = email;
       }
-      if (rol) {
+      if (rol && usuario_id != id) {
         usuario.permiso_id = rol;
       }
       if (contraseña) {
-        usuario.contraseña = contraseña;
+        const hashedPassword = await bcrypt.hash(contraseña, 10);
+        usuario.contraseña = hashedPassword;
       }
 
       await usuario.save();

@@ -5,9 +5,9 @@ const bcrypt = require("bcrypt");
 
 // Configurar Passport con bcrypt
 passport.use(
-  new LocalStrategy(async (username, password, done) => {
+  new LocalStrategy(async (email, password, done) => {
     try {
-      const user = await db.Usuario.findOne({ where: { nombre: username } });
+      const user = await db.Usuario.findOne({ where: { email: email } });
       if (!user) return done(null, false, { message: "Usuario no encontrado" });
       const match = await bcrypt.compare(password, user.contraseña);
       if (!match)

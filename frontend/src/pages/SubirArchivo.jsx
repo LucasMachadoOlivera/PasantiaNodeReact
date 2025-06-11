@@ -58,7 +58,7 @@ export default function SubirArchivo({
       />
       <input
         type="text"
-        placeholder="Descripcion"
+        placeholder="Descripción"
         value={descripcion}
         onChange={(e) => setDescripcion(e.target.value)}
         className="input-text"
@@ -128,7 +128,7 @@ export default function SubirArchivo({
         Subir Archivos
       </button>
       <p className="nota-subida">
-        Nota: Despues de subir los archivos se podran realizar mas cambios.
+        Nota: Después de subir los archivos se podrán realizar más cambios.
       </p>
     </form>
   );

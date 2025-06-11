@@ -7,11 +7,11 @@ const cors = require("cors");
 const passport = require("./passport/passport");
 
 const app = express();
-// Configuración de CORS para permitir que React (cliente) se comunique con Express (servidor)
+// Configuracion de CORS para permitir que React (cliente) se comunique con Express (servidor)
 app.use(
   cors({
-    origin: "http://localhost:5173", // Cambia esta URL si tu React está corriendo en otro puerto
-    credentials: true, // Esto es importante para enviar las cookies de sesión
+    origin: "http://localhost:5173", // puerto React está corriendo
+    credentials: true, // Esto es importante para enviar las cookies
   })
 );
 
@@ -43,6 +43,7 @@ const fileRoutes = require("./routes/files");
 const uploadRoute = require("./routes/upload");
 const registroRoute = require("./routes/registro");
 const permisoRoute = require("./routes/permisos");
+const emailRoute = require("./routes/email");
 
 const seedDatabase = require("./database");
 
@@ -50,6 +51,7 @@ app.use(express.static(path.join(__dirname, "src/pages/public")));
 
 // Rutas
 app.post("/login", passport.authenticate("local"), (req, res) => {
+  console.log("entr al login");
   res.json({ ok: true });
 });
 
@@ -193,6 +195,8 @@ app.use("/api/categorias", categoryRoutes);
 app.use("/api/files", fileRoutes);
 
 app.use("/api/registros", registroRoute);
+
+app.use("/api/email", emailRoute);
 
 // Sincroniza la base de datos
 db.sequelize

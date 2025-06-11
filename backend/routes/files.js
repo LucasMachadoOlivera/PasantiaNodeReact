@@ -135,9 +135,12 @@ router.post("/", upload.array("archivos"), async (req, res) => {
         let miniatura = "";
 
         //Metodo para guardar la miniatura
-        if (tipo == "pdf") {
+        const tiposPdf = ["pdf"];
+        const tiposVideo = ["mp4", "avi", "mov", "mkv"];
+
+        if (tiposPdf.includes(tipo)) {
           miniatura = await getMiniaturePDF(archivo.path);
-        } else if (tipo == "mp4") {
+        } else if (tiposVideo.includes(tipo)) {
           miniatura = await getMiniatureVideo(archivo.path);
         } else if (tipo == "zip") {
         } else {
@@ -218,13 +221,15 @@ router.get("/perfil", async (req, res) => {
       [Op.ne]: "Subiendo",
     };
     where.usuario_id = usuario_id;
-
+    console.log("anteds");
     const files = await db.File.findAll({
       where: where,
       include: [
         {
           model: db.Usuario,
           as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["email"],
         },
         {
           model: db.Usuario,
@@ -235,6 +240,8 @@ router.get("/perfil", async (req, res) => {
         },
       ],
     });
+    console.log("despues");
+    console.log("despues", files);
     res.json(files);
   } catch (error) {
     console.error("Error al obtener archivos:", error);
@@ -254,6 +261,8 @@ router.get("/todo", async (req, res) => {
           {
             model: db.Usuario,
             as: "UsuariosConAcceso",
+            through: { attributes: ["file_id", "permiso", "usuario_id"] },
+            attributes: ["email"],
           },
           {
             model: db.Usuario,
@@ -284,7 +293,10 @@ router.get("/perfil-compartido", async (req, res) => {
           model: db.Usuario,
           as: "UsuariosConAcceso",
           where: { id: usuario_id },
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["email"],
         },
+
         {
           model: db.Usuario,
         },
@@ -308,6 +320,8 @@ router.get("/perfil-compartido", async (req, res) => {
         {
           model: db.Usuario,
           as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["email"],
         },
         {
           model: db.Usuario,
@@ -364,6 +378,8 @@ router.get("/conAcceso/:id", async (req, res) => {
         {
           model: db.Usuario,
           as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["email"],
         },
       ],
     });
@@ -383,7 +399,7 @@ router.post("/update", upload.none(), async (req, res) => {
     if (permitido) {
       const { id, nombre, descripcion, fecha, estado } = req.body;
       let categorias = req.body.Categoria;
-      let conAcceso = req.body.UsuariosConAcceso;
+      // let conAcceso = req.body.UsuariosConAcceso;
 
       try {
         const filas = await db.File.findByPk(id);
@@ -398,7 +414,25 @@ router.post("/update", upload.none(), async (req, res) => {
             where: { id },
           }
         );
-
+        /*
+        for (let i = 0; i < conAcceso.length; i++) {
+          const acceso = conAcceso[i];
+          console.log("agrego el primeor");
+          if (i === 0) {
+            console.log("agrego el primeor");
+            // El primer usuario: reemplaza todas las relaciones anteriores
+            await filas.setUsuariosConAcceso(acceso.id, {
+              through: { permiso: "Editor" },
+            });
+          } else {
+            console.log("agrego los otros");
+            // Los siguientes usuarios: agrega sin borrar
+            await filas.addUsuariosConAcceso(file1, {
+              through: { permiso: acceso.File_usuario.permiso },
+            });
+          }
+        }
+*/
         if (typeof categorias === "string") {
           try {
             categorias = JSON.parse(categorias);
@@ -419,10 +453,6 @@ router.post("/update", upload.none(), async (req, res) => {
               .json({ mensaje: "Relaciones para compartir inválidas" });
           }
         }
-
-        const conAccesoIdUser = conAcceso.map((a) => a.id);
-        const conAccesoIdPrivilegio = conAcceso.map((a) => a.id);
-        await filas.setCategoria(categoriasId);
       } catch (error) {
         console.error("Error al actualizar:", error);
       }
@@ -542,16 +572,35 @@ router.post("/filtrado/:origen", async (req, res) => {
     }
 
     if (fecha_inicio && fecha_fin) {
+      const obtenerInicioDelDia = (fecha) => {
+        console.log("inicio");
+        const f = new Date(fecha);
+        f.setUTCHours(0, 0, 0, 0); // 00:00:00.000
+        console.log("inicioF", f);
+        return f;
+      };
+
+      const obtenerFinDelDia = (fecha) => {
+        const f = new Date(fecha);
+        console.log("final");
+        f.setUTCHours(23, 59, 59, 999); // 23:59:59.999
+        console.log("finalF", f);
+        return f;
+      };
+
       where.fecha = {
-        [Op.between]: [fecha_inicio, fecha_fin],
+        [Op.between]: [
+          obtenerInicioDelDia(fecha_inicio),
+          obtenerFinDelDia(fecha_fin),
+        ],
       };
     } else if (fecha_inicio) {
       where.fecha = {
-        [Op.gte]: fecha_inicio,
+        [Op.gte]: obtenerInicioDelDia(fecha_inicio),
       };
     } else if (fecha_fin) {
       where.fecha = {
-        [Op.lte]: fecha_fin,
+        [Op.lte]: obtenerFinDelDia(fecha_fin),
       };
     }
 
@@ -600,6 +649,7 @@ router.post("/filtrado/:origen", async (req, res) => {
     const categoriasIds = categoriasArray.map((id) => parseInt(id));
     if (categoriasIds.length === 0) {
       let files;
+      console.log("contrlar fecha 1");
       files = await db.File.findAll({
         include: [
           {
@@ -610,7 +660,7 @@ router.post("/filtrado/:origen", async (req, res) => {
         ],
         where: where,
       });
-
+      console.log("contrlar fecha 2");
       ids1 = [];
       for (const file of files) {
         ids1.push(file.id);
@@ -673,7 +723,10 @@ router.post("/filtrado/:origen", async (req, res) => {
         {
           model: db.Usuario,
           as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["email"],
         },
+
         {
           model: db.Usuario,
         },
@@ -688,6 +741,81 @@ router.post("/filtrado/:origen", async (req, res) => {
   } catch (error) {
     console.error("Error al obtener files:", error);
     res.status(500).json({ error: "Error al listar files" });
+  }
+});
+
+//Obtener a quien se comparte determinado archivo
+router.get("/compartiendo/:id", async (req, res) => {
+  const usuario_id = req.usuarioId;
+  try {
+    const id = req.params.id;
+    const where = {};
+    where.id = id;
+    const files = await db.File.findOne({
+      where: where,
+      include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["email"],
+        },
+      ],
+    });
+    res.json(files);
+  } catch (error) {
+    console.error("Error al obtener compartidos:", error);
+    res.status(500).json({ error: "Error al obtener compartidos" });
+  }
+});
+
+router.get("/borrar/:user/:file", async (req, res) => {
+  try {
+    const permisos = await obtenerPermisos(req.usuarioId);
+
+    const permitido = permisos.edarchivo;
+
+    if (permitido) {
+      const user = req.params.user;
+      console.log("quitando35");
+      const file = req.params.file;
+      const usuario = await db.Usuario.findByPk(user);
+      console.log("quitando3");
+      await usuario.removeFilesCompartidos(file);
+      console.log("quitado3");
+      /*
+      db.Registro.create({
+        usuario: req.usuarioId,
+        accion:
+          "El usuario: " +
+          req.usuarioNombre +
+          ", quito al usuario con el id: " +
+          user.id +
+          ", del documento con id " +
+          file.id,
+      });
+      */
+      const where = {};
+      where.id = file;
+      const files = await db.File.findOne({
+        where: where,
+        include: [
+          {
+            model: db.Usuario,
+            as: "UsuariosConAcceso",
+            through: { attributes: ["file_id", "permiso", "usuario_id"] },
+            attributes: ["email"],
+          },
+        ],
+      });
+      res.json(files);
+    } else {
+      throw new Error("No se tiene permisos suficientes");
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "No se pudo eliminar", detalles: error.message });
   }
 });
 

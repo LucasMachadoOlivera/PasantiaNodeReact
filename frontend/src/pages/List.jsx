@@ -84,7 +84,7 @@ export default function List({ data, abrirMedia }) {
               <div>
                 <span>
                   <strong>
-                    Categorias: <strong />
+                    Categorías: <strong />
                   </strong>
                 </span>
                 {doc.Categoria && doc.Categoria.length > 0 ? (

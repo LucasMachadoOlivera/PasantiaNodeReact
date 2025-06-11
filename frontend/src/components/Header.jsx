@@ -43,7 +43,7 @@ function Header() {
           <Link to="/">Inicio</Link>
           <Link to="/perfil">Perfil</Link>
           <button className="link" onClick={handleLogout}>
-            CERRAR SESION
+            Cerrar Sesión
           </button>
         </nav>
       )}
