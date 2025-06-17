@@ -29,22 +29,12 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: false, // Valor por defecto
     },
-    agarchivo: {
-      type: DataTypes.BOOLEAN, // Campo booleano
-      allowNull: false,
-      defaultValue: false, // Valor por defecto
-    },
     edarchivo: {
       type: DataTypes.BOOLEAN, // Campo booleano
       allowNull: false,
       defaultValue: false, // Valor por defecto
     },
     elarchivo: {
-      type: DataTypes.BOOLEAN, // Campo booleano
-      allowNull: false,
-      defaultValue: false, // Valor por defecto
-    },
-    registrar: {
       type: DataTypes.BOOLEAN, // Campo booleano
       allowNull: false,
       defaultValue: false, // Valor por defecto
@@ -65,11 +55,6 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: false, // Valor por defecto
     },
     elusuario: {
-      type: DataTypes.BOOLEAN, // Campo booleano
-      allowNull: false,
-      defaultValue: false, // Valor por defecto
-    },
-    resusuario: {
       type: DataTypes.BOOLEAN, // Campo booleano
       allowNull: false,
       defaultValue: false, // Valor por defecto

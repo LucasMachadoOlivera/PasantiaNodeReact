@@ -31,7 +31,9 @@ export default function EditableFileList({
   };
 
   const urlImagen = (img) => {
-    return `http://localhost:3000/${img}`;
+    return `http://${import.meta.env.VITE_HOST}:${
+      import.meta.env.VITE_PORT
+    }/${img}`;
   };
 
   const listadoArchivos = async () => {

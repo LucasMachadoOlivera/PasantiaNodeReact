@@ -6,6 +6,7 @@ export default function Categorias() {
   const [campos, setCampos] = useState([]);
   const [permisopropio, setPermisopropio] = useState([]);
   const [permisos, setPermisos] = useState([]);
+  const [nombre, setNombre] = useState([]);
   const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export default function Categorias() {
       const response = await axios.get("/api/permisos/usuario");
       setPermisopropio(response.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -27,9 +28,9 @@ export default function Categorias() {
     try {
       const response = await axios.get("/api/permisos/");
       setPermisos(response.data);
-      setCampos(Object.keys(response.data[0]).slice(2, 19));
+      setCampos(Object.keys(response.data[0]).slice(2, 18));
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
   const actualizarPermiso = async (id) => {
@@ -40,7 +41,7 @@ export default function Categorias() {
 
       listarPermisos();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -50,7 +51,7 @@ export default function Categorias() {
 
       listarPermisos();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -71,19 +72,44 @@ export default function Categorias() {
     }
   };
 
+  const nuevoPermiso = async (dato) => {
+    await axios.post("/api/permisos/", dato);
+    setNombre({ nombre: "" });
+  };
+
   return (
     <>
       <div className="categorias-container">
         {permisopropio?.verpermiso === true && (
           <div className="listado">
+            <div>
+              <h2>Agregar Permiso</h2>
+              <form>
+                <input
+                  type="text"
+                  value={nombre.nombre}
+                  onChange={(e) =>
+                    setNombre({ ...nombre, nombre: e.target.value })
+                  }
+                />
+                <button onClick={() => nuevoPermiso(nombre)}>Agregar</button>
+              </form>
+            </div>
+            <br />
             <h3>Permisos</h3>
             <br />
+            {permisopropio?.elpermiso === true && (
+              <p>
+                Eliminar: ELIMINA TAMBIEN LOS USUARIOS CON EL PERMISO Y LOS
+                ARCHIVOS SUBIDOS POR EL USUARIO
+              </p>
+            )}
             <table border="1" cellPadding="5">
               <thead>
                 <tr>
                   <th></th>
                   {permisos.map((permiso, index) =>
-                    index < 2 ? (
+                    index < 1 ? (
                       <th key={"btns-" + permiso.id}></th>
                     ) : (
                       <th key={"btns-" + permiso.id}>
@@ -93,7 +119,7 @@ export default function Categorias() {
                           </button>
                         )}
                         <br />
-                        {permisopropio?.elpermiso === true && (
+                        {permisopropio?.elpermiso === true && index > 1 && (
                           <button onClick={() => eliminarPermiso(permiso.id)}>
                             Eliminar
                           </button>
@@ -122,7 +148,7 @@ export default function Categorias() {
                           key={permiso.id + "-" + campo}
                           style={{ backgroundColor: color }}
                         >
-                          {typeof valor === "boolean" && indexPermiso > 1 ? (
+                          {typeof valor === "boolean" && indexPermiso > 0 ? (
                             <input
                               type="checkbox"
                               checked={valor}

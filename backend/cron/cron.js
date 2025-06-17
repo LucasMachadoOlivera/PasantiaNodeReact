@@ -46,12 +46,12 @@ cron.schedule("0 0 * * *", async () => {
 
     for (const usuario of usuarios) {
       await usuario.destroy(); // Eliminamos el usuario
-      console.log(`🗑️ Usuario ${usuario.id} eliminado (pendiente > 1 día)`);
+      console.log(`Usuario ${usuario.id} eliminado (pendiente > 1 día)`);
     }
 
-    console.log("✅ Tarea diaria de eliminación completada");
+    console.log("Tarea diaria de eliminación completada");
   } catch (error) {
-    console.error("❌ Error en la tarea de eliminación diaria:", error);
+    console.error("Error en la tarea de eliminación diaria:", error);
   }
 });
 

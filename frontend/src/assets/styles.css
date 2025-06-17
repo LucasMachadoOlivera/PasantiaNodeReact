@@ -46,6 +46,6 @@ button {
 }
 
 button:hover {
-  background-color: var(--color-principal1);
-  color: var(--color-secundario);
+  background-color: var(--resaltar);
+  color: var(--color-principal1);
 }

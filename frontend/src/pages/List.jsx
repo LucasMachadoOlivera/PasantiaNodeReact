@@ -3,13 +3,19 @@ import "../assets/List.css";
 
 export default function List({ data, abrirMedia }) {
   const urlImagen = (img) => {
-    return `http://localhost:3000/${img}`;
+    return `http://${import.meta.env.VITE_HOST}:${
+      import.meta.env.VITE_PORT
+    }/${img}`;
   };
   const urlDescargar = (img) => {
-    return `http://localhost:3000/descargar/${img}`;
+    return `http://${import.meta.env.VITE_HOST}:${
+      import.meta.env.VITE_PORT
+    }/descargar/${img}`;
   };
   const urlVer = (img) => {
-    return `http://localhost:3000/${img}`;
+    return `http://${import.meta.env.VITE_HOST}:${
+      import.meta.env.VITE_PORT
+    }/${img}`;
   };
 
   useEffect(() => {
@@ -33,7 +39,7 @@ export default function List({ data, abrirMedia }) {
   };
 
   const [paginaActual, setPaginaActual] = useState(1);
-  const elementosPorPagina = 10;
+  const elementosPorPagina = 25;
 
   const indiceInicio = (paginaActual - 1) * elementosPorPagina;
   const indiceFin = indiceInicio + elementosPorPagina;

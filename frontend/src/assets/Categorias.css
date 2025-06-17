@@ -5,10 +5,10 @@
   display: flex;
   gap: 2rem;
   padding: 3rem;
-  flex-wrap: wrap; /* Permite que se envíen a la siguiente línea */
+  flex-wrap: wrap;
 }
 .controles {
-  flex: 1 1 300px; /* crece, encoge, base de 300px */
+  flex: 1 1 300px;
   min-width: 280px;
 }
 .listado {
@@ -49,12 +49,12 @@ li.selected {
   margin-bottom: 1rem;
   width: 100%;
 }
-.btn-agregar {
+.btn-agregar-cat {
   background-color: var(--resaltar);
   color: var(--color-principal1);
   width: 100%;
 }
-.btn-agregar:hover,
+.btn-agregar-cat:hover,
 .btn-intercambiar:hover {
   background-color: var(--color-principal1);
   color: var(--resaltar);
@@ -67,6 +67,11 @@ button {
   padding: 0.5rem 1rem;
   cursor: pointer;
   color: var(--color-fondo);
+  outline: 1px solid var(--color-fondo);
+}
+
+button:hover {
+  outline: none;
 }
 button:disabled {
   cursor: not-allowed;
@@ -79,27 +84,9 @@ button:disabled:hover {
   color: var(--color-principal1);
 }
 
-input[type="text"] {
-  /*width: 100%;
-   margin-bottom: 0.5rem;
-  border-radius: 4px;
-  border: 1px solid var(--color-fondo);
-  box-sizing: border-box;*/
-}
-@media (max-width: 700px) {
-  .categorias-container {
-    flex-direction: column;
-  }
-  .controles,
-  .listado {
-    min-width: 100%;
-  }
-}
-
 .btn-eliminar {
   background-color: var(--color-fondo);
   color: var(--color-principal1);
-  /* float: right;*/
 }
 
 .btn-eliminar:hover {
@@ -110,10 +97,24 @@ input[type="text"] {
 
 .accion-categoria {
   display: flex;
-  gap: 1rem; /* espacio entre cantidad y botón */
+  gap: 1rem;
   align-items: center;
 }
 
 .p-categoria {
   font-style: italic;
+}
+
+.btn-agregar-cat {
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .categorias-container {
+    flex-direction: column;
+  }
+  .controles,
+  .listado {
+    min-width: 100%;
+  }
 }

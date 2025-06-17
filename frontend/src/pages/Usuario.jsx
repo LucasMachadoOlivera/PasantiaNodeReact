@@ -11,9 +11,25 @@ export default function Usuario(usuario) {
   const [formData, setFormData] = useState({ nombre: "", rol: "" });
   const [registros, setRegistros] = useState([]);
   const [permisos, setPermisos] = useState([]);
+  const [rol, setRol] = useState([]);
+  const [registrar, setRegistrar] = useState("");
 
   const [abierto, setAbierto] = useState(false);
   const [seleccionado, setSeleccionado] = useState(null);
+
+  const [mensaje, setMensaje] = useState("");
+  const [tipoMensaje, setTipoMensaje] = useState(""); // 'error' o 'exito'
+
+  // Limpiar mensaje después de 3 segundos
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => {
+        setMensaje("");
+        setTipoMensaje("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensaje]);
 
   const navigate = useNavigate();
   // Cargar imágenes desde el servidor
@@ -21,6 +37,7 @@ export default function Usuario(usuario) {
     listaUsuarios();
     //setUsuarios(listaCategory.data);
     obtenerPermisos();
+    listarRoles();
   }, [navigate]);
 
   const obtenerPermisos = async () => {
@@ -28,7 +45,7 @@ export default function Usuario(usuario) {
       const response = await axios.get("/api/permisos/usuario");
       setPermisos(response.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -54,16 +71,18 @@ export default function Usuario(usuario) {
 
       setUsuarios(response.data); // Actualizar el estado con las categorías
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
-  const rol = [
-    { id: "1", nombre: "Admin" },
-    { id: "2", nombre: "Default" },
-    { id: "3", nombre: "Categoria" },
-    { id: "5", nombre: "User" },
-  ];
+  const listarRoles = async () => {
+    try {
+      const response = await axios.get(`/api/permisos/`);
+      setRol(response.data); // Actualizar el estado con las categorías
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const listarRegistros = async (id) => {
     try {
@@ -71,7 +90,7 @@ export default function Usuario(usuario) {
 
       setRegistros(response.data); // Actualizar el estado con las categorías
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -85,13 +104,20 @@ export default function Usuario(usuario) {
       nombre: usuario.nombre,
       rol: usuario.Permiso.id,
     });
-    console.log("datosUSURAIO", usuario);
     listarRegistros(usuario.id);
   };
 
   const handleEliminar = async () => {
     if (!usuarioSeleccionado) return;
-    await axios.delete(`/api/usuarios/${usuarioSeleccionado.id}`);
+    try {
+      await axios.delete(`/api/usuarios/${usuarioSeleccionado.id}`);
+      setMensaje("Usuario eliminado");
+      setTipoMensaje("exito");
+    } catch (err) {
+      setMensaje("Error: " + err);
+      setTipoMensaje("error");
+    }
+
     setUsuarios(usuarios.filter((u) => u.id !== usuarioSeleccionado.id));
     setUsuarioSeleccionado(null);
     setModoEdicion(false);
@@ -102,7 +128,15 @@ export default function Usuario(usuario) {
   };
 
   const handleGuardar = async () => {
-    await axios.put(`/api/usuarios/${usuarioSeleccionado.id}`, formData);
+    try {
+      await axios.put(`/api/usuarios/${usuarioSeleccionado.id}`, formData);
+      setMensaje("Usuario actualizado");
+      setTipoMensaje("exito");
+    } catch (err) {
+      setMensaje("Error: " + err);
+      setTipoMensaje("error");
+    }
+
     listaUsuarios();
     setRegistros([]);
     setFormData({ nombre: "", rol: "" });
@@ -121,12 +155,14 @@ export default function Usuario(usuario) {
 
   const handleResetearPassword = async () => {
     if (usuarioSeleccionado) {
-      console.log("datosuser", usuarioSeleccionado);
-      await axios.post(`/api/email/update`, usuarioSeleccionado);
-      alert(
-        `Se ha enviado un enlace para resetear la contraseña a: ${usuarioSeleccionado.email}`
-      );
-      // Aquí podrías implementar lógica real con backend o un modal
+      try {
+        await axios.post(`/api/email/update`, usuarioSeleccionado);
+        setMensaje("Contraseña reseteada, email enviado");
+        setTipoMensaje("exito");
+      } catch (err) {
+        setMensaje("Error: " + err);
+        setTipoMensaje("error");
+      }
     }
   };
 
@@ -136,11 +172,41 @@ export default function Usuario(usuario) {
     setAbierto(false);
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      // Hacer la solicitud de autenticación usando axios
+      await axios.post("/api/email/", { email: registrar });
+      setMensaje("Usuario agregado");
+      setTipoMensaje("exito");
+    } catch (error) {
+      console.error("Error al agregar usuario:", error);
+      setMensaje("Error: " + error);
+      setTipoMensaje("error");
+    }
+    setRegistrar("");
+  };
+
   return (
     <>
       <div className="contenedor">
         {/* IZQUIERDA: info usuario + categorías */}
         <div className="columna-izquierda">
+          {permisos?.agusuario === true && (
+            <div className="usuario-register">
+              <h2>Registro</h2>
+              <form onSubmit={handleSubmit}>
+                <input
+                  type="text"
+                  value={registrar}
+                  onChange={(e) => setRegistrar(e.target.value)}
+                />
+                <button type="submit">Registar Usuario</button>
+              </form>
+            </div>
+          )}
+          <br />
           <div className="usuario-info">
             <h2>Información del Usuario</h2>
             {usuarioSeleccionado ? (
@@ -206,9 +272,7 @@ export default function Usuario(usuario) {
                   <p>
                     <strong>Rol:</strong> {usuarioSeleccionado.Permiso.nombre}
                   </p>
-                  <p>
-                    <strong>Estado:</strong> Activo
-                  </p>
+
                   <div className="usuario-actions">
                     {permisos?.edusuario === true && (
                       <button onClick={handleEditar}>Editar</button>
@@ -228,6 +292,12 @@ export default function Usuario(usuario) {
                       </button>
                     )}
                   </div>
+                  {permisos?.elusuario === true && (
+                    <p>
+                      Eliminar: TAMBIEN ELIMINA LOS ARCHIVOS SUBIDOS POR EL
+                      USUARIO
+                    </p>
+                  )}
                 </>
               )
             ) : (
@@ -282,6 +352,15 @@ export default function Usuario(usuario) {
           </div>
         )}
       </div>
+      {mensaje && (
+        <div
+          className={`mensaje-pop ${
+            tipoMensaje === "error" ? "mensaje-error" : "mensaje-exito"
+          }`}
+        >
+          {mensaje}
+        </div>
+      )}
     </>
   );
 }

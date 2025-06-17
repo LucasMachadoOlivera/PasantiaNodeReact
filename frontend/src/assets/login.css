@@ -2,8 +2,8 @@
   background-color: var(--resaltar); /* El color de fondo */
   color: var(--color-principal1);
   width: 100vw; /* 100% del ancho de la ventana */
-  padding: 1rem; /* Espacio interno opcional */
-  text-align: center; /* Centra el texto (opcional) */
+  padding: 1rem;
+  text-align: center;
 }
 
 /* Elementos del formulario */

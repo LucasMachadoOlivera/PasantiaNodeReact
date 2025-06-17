@@ -3,7 +3,10 @@ const multer = require("multer");
 const path = require("path");
 const db = require("../models");
 const fs = require("fs");
-const poppler = require("pdf-poppler");
+
+const { createCanvas } = require("canvas");
+const sharp = require("sharp");
+
 const ffmpeg = require("fluent-ffmpeg");
 const router = express.Router();
 const { Op } = require("sequelize");
@@ -14,7 +17,7 @@ async function obtenerPermisos(id) {
       include: [
         {
           model: db.Usuario,
-          where: id,
+          where: { id },
         },
       ],
     });
@@ -25,25 +28,61 @@ async function obtenerPermisos(id) {
   }
 }
 
+// Función para generar miniatura desde PDF
 async function getMiniaturePDF(pdfPath) {
-  const baseName = path.basename(pdfPath, path.extname(pdfPath));
-  const outputFileName = `${baseName}-1.jpg`;
-  const outputPath = path.join("thumbnails", outputFileName);
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-  const options = {
-    format: "jpeg",
-    out_dir: path.resolve("thumbnails"),
-    out_prefix: baseName,
-    page: 1,
-  };
+  const data = new Uint8Array(fs.readFileSync(pdfPath));
+
+  const loadingTask = pdfjsLib.getDocument({ data });
 
   try {
-    await poppler.convert(pdfPath, options);
+    const pdfDocument = await loadingTask.promise;
 
-    return outputPath;
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error al generar la miniatura");
+    if (pdfDocument.numPages === 0) {
+      throw new Error("El PDF no contiene páginas.");
+    }
+
+    const page = await pdfDocument.getPage(1);
+    const viewport = page.getViewport({ scale: 2 });
+
+    if (viewport.width === 0 || viewport.height === 0) {
+      throw new Error("La primera página no tiene contenido visible.");
+    }
+
+    const canvas = createCanvas(viewport.width, viewport.height);
+    const context = canvas.getContext("2d");
+
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport,
+    };
+
+    await page.render(renderContext).promise;
+
+    const pngBuffer = canvas.toBuffer("image/png");
+
+    const jpgBuffer = await sharp(pngBuffer)
+      .resize({ width: 300 })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
+    const thumbnailsDir = path.resolve("thumbnails");
+    if (!fs.existsSync(thumbnailsDir)) {
+      fs.mkdirSync(thumbnailsDir);
+    }
+
+    const baseName = path.basename(pdfPath, path.extname(pdfPath));
+    const outputPath = path.join(thumbnailsDir, `${baseName}-page1.jpg`);
+
+    fs.writeFileSync(outputPath, jpgBuffer);
+
+    const outputFileName = `${baseName}-page1.jpg`;
+    const outputPath1 = path.join("thumbnails", outputFileName);
+    return outputPath1;
+  } catch (error) {
+    console.error("Error al generar miniatura PDF:", error.message);
+    throw error;
   }
 }
 
@@ -115,72 +154,67 @@ const upload = multer({ storage: storage });
 router.post("/", upload.array("archivos"), async (req, res) => {
   try {
     const usuario_id = req.usuarioId;
-    const permisos = await obtenerPermisos(usuario_id);
-    const permitido = permisos.agarchivo;
-    if (permitido) {
-      const { categorias } = req.body;
-      const fecha = new Date();
-      const archivos = req.files;
 
-      for (let i = 0; i < archivos.length; i++) {
-        const archivo = archivos[i];
-        const nombre = path
-          .basename(archivo.originalname)
-          .slice(
-            0,
-            path.basename(archivo.originalname).length -
-              path.extname(archivo.originalname).length
-          );
-        const tipo = path.extname(archivo.path).slice(1);
-        let miniatura = "";
+    const { categorias } = req.body;
+    const fecha = new Date();
+    const archivos = req.files;
 
-        //Metodo para guardar la miniatura
-        const tiposPdf = ["pdf"];
-        const tiposVideo = ["mp4", "avi", "mov", "mkv"];
+    for (let i = 0; i < archivos.length; i++) {
+      const archivo = archivos[i];
+      const nombre = path
+        .basename(archivo.originalname)
+        .slice(
+          0,
+          path.basename(archivo.originalname).length -
+            path.extname(archivo.originalname).length
+        );
+      const tipo = path.extname(archivo.path).slice(1);
+      let miniatura = "";
 
-        if (tiposPdf.includes(tipo)) {
-          miniatura = await getMiniaturePDF(archivo.path);
-        } else if (tiposVideo.includes(tipo)) {
-          miniatura = await getMiniatureVideo(archivo.path);
-        } else if (tipo == "zip") {
-        } else {
-          miniatura = archivo.path;
-        }
-        const estado = "Subiendo";
-        const descripcion = req.body.descripcion;
-        const arch = await db.File.create({
-          miniatura,
-          tipo,
-          fecha,
-          nombre,
-          descripcion,
-          usuario_id,
-          estado,
-          archivo: archivo.path,
-        });
+      //Metodo para guardar la miniatura
+      const tiposPdf = ["pdf"];
+      const tiposVideo = ["mp4", "avi", "mov", "mkv"];
 
-        if (categorias) {
-          const catIds = Array.isArray(categorias)
-            ? categorias
-            : JSON.parse(categorias);
-          await arch.addCategoria(catIds);
-        }
-
-        db.Registro.create({
-          log_id: req.usuarioId,
-          accion:
-            "El usuario: " +
-            req.usuarioNombre +
-            ", esta subiendo el archivo con el id: " +
-            arch.id,
-        });
+      if (tiposPdf.includes(tipo)) {
+        miniatura = await getMiniaturePDF(archivo.path);
+      } else if (tiposVideo.includes(tipo)) {
+        miniatura = await getMiniatureVideo(archivo.path);
+      } else if (tipo == "zip") {
+      } else {
+        miniatura = archivo.path;
       }
-      res.json({
-        message: "Formulario recibido correctamente",
+      const estado = "Subiendo";
+      const descripcion = req.body.descripcion;
+      const arch = await db.File.create({
+        miniatura,
+        tipo,
+        fecha,
+        nombre,
+        descripcion,
+        usuario_id,
+        estado,
+        archivo: archivo.path,
       });
-    } else {
-      throw new Error("No se tiene permisos suficientes");
+
+      if (categorias) {
+        const catIds = Array.isArray(categorias)
+          ? categorias
+          : JSON.parse(categorias);
+        await arch.addCategoria(catIds);
+      }
+
+      db.Registro.create({
+        log_id: req.usuarioId,
+        accion:
+          "El usuario: " +
+          req.usuarioNombre +
+          ", esta subiendo el archivo con el id: " +
+          arch.id,
+      });
     }
+    res.json({
+      message: "Formulario recibido correctamente",
+    });
   } catch (error) {
     console.error("Error al procesar el formulario:", error);
     res.status(500).json({ error: "Hubo un error al procesar el formulario" });
@@ -221,7 +255,6 @@ router.get("/perfil", async (req, res) => {
       [Op.ne]: "Subiendo",
     };
     where.usuario_id = usuario_id;
-    console.log("anteds");
     const files = await db.File.findAll({
       where: where,
       include: [
@@ -240,8 +273,6 @@ router.get("/perfil", async (req, res) => {
         },
       ],
     });
-    console.log("despues");
-    console.log("despues", files);
     res.json(files);
   } catch (error) {
     console.error("Error al obtener archivos:", error);
@@ -249,34 +280,41 @@ router.get("/perfil", async (req, res) => {
   }
 });
 
+router.get("/todo", async (req, res, next) => {
+  const permisos = await obtenerPermisos(req.usuarioId);
+  const permitido = permisos.verarchivo;
+  if (permitido) {
+    return next(); // Continúa con el siguiente
+  } else {
+    return res
+      .status(401)
+      .json({ message: "No se tiene permisos suficientes" });
+  }
+});
+
 //Listar todos los archivos publico, privado o subiendose - se requieren permisos
 router.get("/todo", async (req, res) => {
   try {
     const usuario_id = req.usuarioId;
-    const permisos = await obtenerPermisos(usuario_id);
-    const permitido = permisos.verarchivo;
-    if (permitido) {
-      const files = await db.File.findAll({
-        include: [
-          {
-            model: db.Usuario,
-            as: "UsuariosConAcceso",
-            through: { attributes: ["file_id", "permiso", "usuario_id"] },
-            attributes: ["email"],
-          },
-          {
-            model: db.Usuario,
-          },
 
-          {
-            model: db.Categoria,
-          },
-        ],
-      });
-      res.json(files);
-    } else {
-      throw new Error("No se tiene permisos suficientes");
-    }
+    const files = await db.File.findAll({
+      include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["email"],
+        },
+        {
+          model: db.Usuario,
+        },
+
+        {
+          model: db.Categoria,
+        },
+      ],
+    });
+    res.json(files);
   } catch (error) {
     console.error("Error al obtener archivos:", error);
     res.status(500).json({ error: "Error al listar archivos" });
@@ -365,7 +403,43 @@ router.get("/revisando", async (req, res) => {
   }
 });
 
-//Listar los archivos que el usuario esta subiendo
+router.get("/conAcceso/:id", async (req, res, next) => {
+  const permisos = await obtenerPermisos(req.usuarioId);
+  const permitido = permisos.edarchivo;
+  if (permitido) {
+    return next(); // Continúa con el siguiente
+  } else {
+    const file = await db.File.findByPk(req.body.id, {
+      include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["id"],
+        },
+      ],
+    });
+
+    for (const nombre of file.UsuariosConAcceso) {
+      if (
+        nombre.File_usuario.usuario_id == req.usuarioId &&
+        nombre.File_usuario.permiso == "Editor"
+      ) {
+        return next();
+      }
+    }
+
+    if (file.usuario_id == req.usuarioId) {
+      return next();
+    } else {
+      return res
+        .status(401)
+        .json({ message: "No se tiene permisos suficientes" });
+    }
+  }
+});
+
+//Obtener informacion de un archivo que se esta subiendo
 router.get("/conAcceso/:id", async (req, res) => {
   const usuario_id = req.usuarioId;
   try {
@@ -390,86 +464,99 @@ router.get("/conAcceso/:id", async (req, res) => {
   }
 });
 
+router.post("/update", async (req, res, next) => {
+  const permisos = await obtenerPermisos(req.usuarioId);
+  const permitido = permisos.edarchivo;
+  if (permitido) {
+    return next(); // Continúa con el siguiente
+  } else {
+    const file = await db.File.findByPk(req.body.id, {
+      include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["id"],
+        },
+      ],
+    });
+
+    for (const nombre of file.UsuariosConAcceso) {
+      if (
+        nombre.File_usuario.usuario_id == req.usuarioId &&
+        nombre.File_usuario.permiso == "Editor"
+      ) {
+        return next();
+      }
+    }
+
+    if (file.usuario_id == req.usuarioId) {
+      return next();
+    } else {
+      return res
+        .status(401)
+        .json({ message: "No se tiene permisos suficientes" });
+    }
+  }
+});
+
 //Actualizar un archivo
 router.post("/update", upload.none(), async (req, res) => {
   try {
     const usuario_id = req.usuarioId;
-    const permisos = await obtenerPermisos(usuario_id);
-    const permitido = permisos.edarchivo;
-    if (permitido) {
-      const { id, nombre, descripcion, fecha, estado } = req.body;
-      let categorias = req.body.Categoria;
-      // let conAcceso = req.body.UsuariosConAcceso;
 
-      try {
-        const filas = await db.File.findByPk(id);
-        await filas.update(
-          {
-            nombre,
-            descripcion,
-            estado,
-            fecha,
-          },
-          {
-            where: { id },
-          }
-        );
-        /*
-        for (let i = 0; i < conAcceso.length; i++) {
-          const acceso = conAcceso[i];
-          console.log("agrego el primeor");
-          if (i === 0) {
-            console.log("agrego el primeor");
-            // El primer usuario: reemplaza todas las relaciones anteriores
-            await filas.setUsuariosConAcceso(acceso.id, {
-              through: { permiso: "Editor" },
-            });
-          } else {
-            console.log("agrego los otros");
-            // Los siguientes usuarios: agrega sin borrar
-            await filas.addUsuariosConAcceso(file1, {
-              through: { permiso: acceso.File_usuario.permiso },
-            });
-          }
-        }
-*/
-        if (typeof categorias === "string") {
-          try {
-            categorias = JSON.parse(categorias);
-          } catch (e) {
-            return res.status(400).json({ mensaje: "Categorías inválidas" });
-          }
-        }
+    const { id, nombre, descripcion, fecha, estado } = req.body;
+    let categorias = req.body.Categoria;
+    // let conAcceso = req.body.UsuariosConAcceso;
 
-        const categoriasId = categorias.map((a) => a.id);
-        await filas.setCategoria(categoriasId);
-
-        if (typeof conAcceso === "string") {
-          try {
-            conAcceso = JSON.parse(conAcceso);
-          } catch (e) {
-            return res
-              .status(400)
-              .json({ mensaje: "Relaciones para compartir inválidas" });
-          }
+    try {
+      const filas = await db.File.findByPk(id);
+      await filas.update(
+        {
+          nombre,
+          descripcion,
+          estado,
+          fecha,
+        },
+        {
+          where: { id },
         }
-      } catch (error) {
-        console.error("Error al actualizar:", error);
+      );
+
+      if (typeof categorias === "string") {
+        try {
+          categorias = JSON.parse(categorias);
+        } catch (e) {
+          return res.status(400).json({ mensaje: "Categorías inválidas" });
+        }
       }
-      db.Registro.create({
-        usuario: usuario_id,
-        accion:
-          "El usuario: " +
-          req.usuarioNombre +
-          ", actualizo el archivo con el id: " +
-          id,
-      });
-      res.json({
-        message: "Formulario recibido correctamente",
-      });
-    } else {
-      throw new Error("No se tiene permisos suficientes");
+
+      const categoriasId = categorias.map((a) => a.id);
+      await filas.setCategoria(categoriasId);
+
+      if (typeof conAcceso === "string") {
+        try {
+          conAcceso = JSON.parse(conAcceso);
+        } catch (e) {
+          return res
+            .status(400)
+            .json({ mensaje: "Relaciones para compartir inválidas" });
+        }
+      }
+    } catch (error) {
+      console.error("Error al actualizar:", error);
     }
+    db.Registro.create({
+      usuario: usuario_id,
+      accion:
+        "El usuario: " +
+        req.usuarioNombre +
+        ", actualizo el archivo con el id: " +
+        id,
+    });
+    res.json({
+      message: "Formulario recibido correctamente",
+    });
   } catch (error) {
     console.error("Error al procesar el formulario:", error);
     res.status(500).json({ error: "Hubo un error al procesar el formulario" });
@@ -480,14 +567,14 @@ router.post("/update", upload.none(), async (req, res) => {
 router.post("/estado/true/:id", upload.none(), async (req, res) => {
   try {
     const { id } = req.params;
-
+    const usuario_id = req.usuarioId;
     const filas = await db.File.findByPk(id);
     await filas.update(
       {
         estado: "Publico",
       },
       {
-        where: { id },
+        where: { id, usuario_id },
       }
     );
 
@@ -508,42 +595,68 @@ router.post("/estado/true/:id", upload.none(), async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res, next) => {
+  const permisos = await obtenerPermisos(req.usuarioId);
+  const permitido = permisos.elarchivo;
+  if (permitido) {
+    return next(); // Continúa con el siguiente
+  } else {
+    const file = await db.File.findByPk(req.params.id);
+
+    if (file.usuario_id == req.usuarioId) {
+      return next();
+    } else {
+      return res
+        .status(401)
+        .json({ message: "No se tiene permisos suficientes" });
+    }
+  }
+});
+
 // Eliminar un archivo
 router.delete("/:id", async (req, res) => {
   try {
     const usuario_id = req.usuarioId;
-    const permisos = await obtenerPermisos(usuario_id);
-    const permitido = permisos.elarchivo;
-    if (permitido) {
-      const file = await db.File.findByPk(req.params.id);
-      if (!file)
-        return res.status(404).json({ error: "Archivo no encontrada" });
+    const file = await db.File.findByPk(req.params.id);
+    if (!file) return res.status(404).json({ error: "Archivo no encontrada" });
 
-      const rutaArchivo = path.join(__dirname, "..", file.archivo);
-      if (fs.existsSync(rutaArchivo)) {
-        fs.unlink(rutaArchivo, (err) => {
-          if (err) {
-            console.error("Error al eliminar el archivo:", err);
-          }
-        });
-      }
-      db.Registro.create({
-        usuario: usuario_id,
-        accion:
-          "El usuario: " +
-          req.usuarioNombre +
-          ", elimino el archivo con el id: " +
-          file.id,
+    const rutaArchivo = path.join(__dirname, "..", file.archivo);
+    if (fs.existsSync(rutaArchivo)) {
+      fs.unlink(rutaArchivo, (err) => {
+        if (err) {
+          console.error("Error al eliminar el archivo:", err);
+        }
       });
-      await file.destroy();
-
-      res.status(204).send();
-    } else {
-      throw new Error("No se tiene permisos suficientes");
     }
+    db.Registro.create({
+      usuario: usuario_id,
+      accion:
+        "El usuario: " +
+        req.usuarioNombre +
+        ", elimino el archivo con el id: " +
+        file.id,
+    });
+    await file.destroy();
+
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+router.post("/filtrado/:origen", async (req, res, next) => {
+  if (req.params.origen === "todo") {
+    const permisos = await obtenerPermisos(req.usuarioId);
+    const permitido = permisos.verarchivo;
+    if (permitido) {
+      return next(); // Continúa con el siguiente
+    } else {
+      return res
+        .status(401)
+        .json({ message: "No se tiene permisos suficientes" });
+    }
+  }
+  return next();
 });
 
 router.post("/filtrado/:origen", async (req, res) => {
@@ -573,18 +686,14 @@ router.post("/filtrado/:origen", async (req, res) => {
 
     if (fecha_inicio && fecha_fin) {
       const obtenerInicioDelDia = (fecha) => {
-        console.log("inicio");
         const f = new Date(fecha);
         f.setUTCHours(0, 0, 0, 0); // 00:00:00.000
-        console.log("inicioF", f);
         return f;
       };
 
       const obtenerFinDelDia = (fecha) => {
         const f = new Date(fecha);
-        console.log("final");
         f.setUTCHours(23, 59, 59, 999); // 23:59:59.999
-        console.log("finalF", f);
         return f;
       };
 
@@ -649,7 +758,6 @@ router.post("/filtrado/:origen", async (req, res) => {
     const categoriasIds = categoriasArray.map((id) => parseInt(id));
     if (categoriasIds.length === 0) {
       let files;
-      console.log("contrlar fecha 1");
       files = await db.File.findAll({
         include: [
           {
@@ -660,7 +768,6 @@ router.post("/filtrado/:origen", async (req, res) => {
         ],
         where: where,
       });
-      console.log("contrlar fecha 2");
       ids1 = [];
       for (const file of files) {
         ids1.push(file.id);
@@ -769,49 +876,66 @@ router.get("/compartiendo/:id", async (req, res) => {
   }
 });
 
+router.get("/borrar/:user/:file", async (req, res, next) => {
+  const permisos = await obtenerPermisos(req.usuarioId);
+  const permitido = permisos.edarchivo;
+
+  if (permitido) {
+    return next(); // Continúa con el siguiente
+  } else {
+    const file = await db.File.findByPk(req.params.file, {
+      include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["id"],
+        },
+      ],
+    });
+
+    for (const nombre of file.UsuariosConAcceso) {
+      if (
+        nombre.File_usuario.usuario_id == req.usuarioId &&
+        nombre.File_usuario.permiso == "Editor" &&
+        req.params.user !== req.usuarioId
+      ) {
+        return next();
+      }
+    }
+
+    if (file.usuario_id == req.usuarioId) {
+      return next();
+    } else {
+      return res
+        .status(401)
+        .json({ message: "No se tiene permisos suficientes" });
+    }
+  }
+});
+
+//quitarle archivo compartido a tal usuario
 router.get("/borrar/:user/:file", async (req, res) => {
   try {
-    const permisos = await obtenerPermisos(req.usuarioId);
+    const user = req.params.user;
+    const file = req.params.file;
+    const usuario = await db.Usuario.findByPk(user);
+    await usuario.removeFilesCompartidos(file);
 
-    const permitido = permisos.edarchivo;
-
-    if (permitido) {
-      const user = req.params.user;
-      console.log("quitando35");
-      const file = req.params.file;
-      const usuario = await db.Usuario.findByPk(user);
-      console.log("quitando3");
-      await usuario.removeFilesCompartidos(file);
-      console.log("quitado3");
-      /*
-      db.Registro.create({
-        usuario: req.usuarioId,
-        accion:
-          "El usuario: " +
-          req.usuarioNombre +
-          ", quito al usuario con el id: " +
-          user.id +
-          ", del documento con id " +
-          file.id,
-      });
-      */
-      const where = {};
-      where.id = file;
-      const files = await db.File.findOne({
-        where: where,
-        include: [
-          {
-            model: db.Usuario,
-            as: "UsuariosConAcceso",
-            through: { attributes: ["file_id", "permiso", "usuario_id"] },
-            attributes: ["email"],
-          },
-        ],
-      });
-      res.json(files);
-    } else {
-      throw new Error("No se tiene permisos suficientes");
-    }
+    const where = {};
+    where.id = file;
+    const files = await db.File.findOne({
+      where: where,
+      include: [
+        {
+          model: db.Usuario,
+          as: "UsuariosConAcceso",
+          through: { attributes: ["file_id", "permiso", "usuario_id"] },
+          attributes: ["email"],
+        },
+      ],
+    });
+    res.json(files);
   } catch (error) {
     res
       .status(500)

@@ -10,6 +10,7 @@ export default function Categorias(categorias1) {
       archivoCount,
     }))
   );
+
   const [permisos, setPermisos] = useState({
     vercategoria: "",
     agcategoria: "",
@@ -33,8 +34,23 @@ export default function Categorias(categorias1) {
   const [selectedForSwap, setSelectedForSwap] = useState([]);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
 
+  const [mensaje, setMensaje] = useState("");
+  const [tipoMensaje, setTipoMensaje] = useState(""); // 'error' o 'exito'
+
+  // Limpiar mensaje después de 3 segundos
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => {
+        setMensaje("");
+        setTipoMensaje("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensaje]);
+
   useEffect(() => {
     // Obtener información de usuario
+    actualizarCategorias;
     obtenerPermisos();
   }, []);
 
@@ -53,7 +69,7 @@ export default function Categorias(categorias1) {
       const response = await axios.get("/api/permisos/usuario");
       setPermisos(response.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -75,8 +91,12 @@ export default function Categorias(categorias1) {
       actualizarCategorias();
 
       setSelectedForSwap([]);
+      setMensaje("Categoria eliminada");
+      setTipoMensaje("exito");
     } catch (err) {
       console.error("Error al cargar categorías:", err);
+      setMensaje("Error el eliminar");
+      setTipoMensaje("error");
     }
   };
 
@@ -86,23 +106,21 @@ export default function Categorias(categorias1) {
       return;
     }
     const [cat1, cat2] = selectedForSwap;
-
-    await axios.post("/api/categorias/reemplazar", {
-      primer: cat1.id,
-      segundo: cat2.id,
-    });
+    try {
+      await axios.post("/api/categorias/reemplazar", {
+        primer: cat1.id,
+        segundo: cat2.id,
+      });
+      setMensaje("Se intercambiaron");
+      setTipoMensaje("exito");
+    } catch (err) {
+      console.error(err);
+      setMensaje("Error el intercambiar");
+      setTipoMensaje("error");
+    }
 
     actualizarCategorias();
 
-    /*
-
-    if (idx1 === -1 || idx2 === -1) return;
-
-    const nuevasCategorias = [...categorias];
-    nuevasCategorias[idx1] = cat2;
-    nuevasCategorias[idx2] = cat1;
-
-    setCategorias(nuevasCategorias);*/
     setSelectedForSwap([]);
   };
 
@@ -118,8 +136,11 @@ export default function Categorias(categorias1) {
       setCategorias([...categorias, catTrimmed]);
       setSelectedForSwap([]);
       setNuevaCategoria("");
+      setMensaje("Categoria agregada");
+      setTipoMensaje("exito");
     } catch (error) {
-      alert(error);
+      setMensaje("Error:" + error);
+      setTipoMensaje("error");
     }
   };
   return (
@@ -158,7 +179,7 @@ export default function Categorias(categorias1) {
                 onChange={(e) => setNuevaCategoria(e.target.value)}
                 required
               />
-              <button className="btn-agregar" onClick={agregarCategoria}>
+              <button className="btn-agregar-cat" onClick={agregarCategoria}>
                 Agregar Categoría
               </button>
             </>
@@ -204,6 +225,15 @@ export default function Categorias(categorias1) {
           </ul>
         </div>
       </div>
+      {mensaje && (
+        <div
+          className={`mensaje-pop ${
+            tipoMensaje === "error" ? "mensaje-error" : "mensaje-exito"
+          }`}
+        >
+          {mensaje}
+        </div>
+      )}
     </>
   );
 }

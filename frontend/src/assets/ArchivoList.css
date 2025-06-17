@@ -4,25 +4,6 @@
   gap: 1rem;
 }
 
-.archivo-item {
-  display: flex;
-  gap: 1rem;
-  background: var(--color-principal1);
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px var(--color-shadow2);
-}
-
-.archivo-imagen img {
-  max-width: 120px;
-  max-height: 170px;
-  object-fit: cover;
-  outline: 0.5px solid var(--resaltar);
-  border-radius: 5px;
-  margin-right: 1rem;
-  flex-shrink: 1;
-}
-
 .archivo-detalles {
   flex: 1;
   display: flex;
@@ -63,6 +44,111 @@
   border-radius: 12px;
   font-size: 0.8rem;
   margin-right: 0.3rem;
-  /*display: inline-block;
-   user-select: none;*/
+  margin-top: 0.3rem;
+
+  display: inline-block;
+  user-select: none;
+}
+
+.archivo-item-image {
+  background-color: var(--background);
+  max-width: 120px;
+  max-height: 170px;
+  object-fit: cover;
+  outline: 0.5px solid var(--resaltar);
+  border-radius: 5px;
+  margin-right: 1rem;
+  flex-shrink: 1;
+}
+
+.archivo-item {
+  background: var(--color-principal1);
+  padding: 1rem;
+  min-width: 300px;
+  flex: 1 1 40%;
+  display: flex;
+  align-items: flex-start;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+.archivo-item-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+.btn-elimina {
+  background-color: var(--color-fondo);
+  color: var(--color-principal1);
+  border-radius: 4px;
+}
+
+.btn-edita {
+  border-radius: 4px;
+  outline: 2px solid var(--color-fondo);
+}
+
+.archivo-item-buttons button:hover,
+.archivo-item-buttons button:focus {
+  background-color: var(--color-principal1);
+  outline: 2px solid var(--resaltar);
+  color: var(--resaltar);
+}
+
+.archivo-editable-file-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (max-width: 1100px) {
+  .archivo-editable-file-buttons {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+  .archivo-item-buttons {
+    flex-direction: row;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    margin-left: 0rem;
+  }
+
+  .archivo-item-buttons button {
+    width: 90px;
+  }
+
+  .archivo-item {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .archivo-item-image {
+    width: 100%;
+    max-width: 30%;
+    max-height: 50%;
+    height: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .archivo-editable-file-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .archivo-item {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .archivo-item-image {
+    width: 100%;
+    max-width: 40%;
+    max-height: 50%;
+    height: auto;
+  }
 }

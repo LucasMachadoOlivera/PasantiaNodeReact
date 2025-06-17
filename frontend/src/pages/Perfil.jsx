@@ -22,6 +22,19 @@ export default function Dashboard() {
     contraseña: "",
   });
 
+  const [mensaje, setMensaje] = useState("");
+  const [tipoMensaje, setTipoMensaje] = useState(""); // 'error' o 'exito'
+
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => {
+        setMensaje("");
+        setTipoMensaje("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensaje]);
+
   useEffect(() => {
     // Obtener información de usuario
     axios
@@ -40,10 +53,17 @@ export default function Dashboard() {
   }, [navigate]);
 
   const actualizarPerfil = async (dato) => {
-    console.log("dato", usuario);
-    await axios.put(`/api/usuarios/${usuario.id}`, dato);
-    setNombre({ nombre: "" });
-    setContraseña({ contraseña: "" });
+    try {
+      await axios.put(`/api/usuarios/${usuario.id}`, dato);
+      setNombre({ nombre: "" });
+      setContraseña({ contraseña: "" });
+      setMensaje("Perfil actualizado."); // Mostrar un mensaje de error
+      setTipoMensaje("exito");
+    } catch (err) {
+      console.error(err);
+      setMensaje("Valor ingresado invalido o muy corto."); // Mostrar un mensaje de error
+      setTipoMensaje("error");
+    }
   };
 
   return (
@@ -59,7 +79,7 @@ export default function Dashboard() {
       </div>
       <br />
       <h2>Cambiar Nombre</h2>
-      <form>
+      <div>
         <input
           type="text"
           value={nombre.nombre}
@@ -68,10 +88,10 @@ export default function Dashboard() {
         <button onClick={() => actualizarPerfil(nombre)}>
           Actualizar nombre
         </button>
-      </form>
-
+      </div>
+      <br />
       <h2>Cambiar Contraseña</h2>
-      <form>
+      <div>
         <input
           type="text"
           value={contraseña.contraseña}
@@ -82,7 +102,16 @@ export default function Dashboard() {
         <button onClick={() => actualizarPerfil(contraseña)}>
           Actualizar contraseña
         </button>
-      </form>
+      </div>
+      {mensaje && (
+        <div
+          className={`mensaje-pop ${
+            tipoMensaje === "error" ? "mensaje-error" : "mensaje-exito"
+          }`}
+        >
+          {mensaje}
+        </div>
+      )}
     </div>
   );
 }

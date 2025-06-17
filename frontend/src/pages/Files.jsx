@@ -98,7 +98,7 @@ function ListaFiles() {
 
       setCategorias(response.data); // Actualizar el estado con las categorías
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

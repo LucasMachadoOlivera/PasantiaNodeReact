@@ -11,7 +11,6 @@
   max-width: 900px;
   margin: 2rem auto;
   padding: 0 1rem;
-  /*font-family: Arial, sans-serif;*/
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -20,7 +19,6 @@
 /* Contenedor superior de inputs y botón */
 .top-row {
   display: flex;
-  /* justify-content: flex-start;*/
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
@@ -28,24 +26,15 @@
 
 .top-row > input {
   flex: 1 1 200px;
-  /*min-width: 150px;
-  padding: 0.4rem 0.8rem;
-   font-size: 1rem;
-  height: 36px;
-  border: 1px solid var(--color-principal4);
-  border-radius: 4px;
-  box-sizing: border-box;*/
 }
 
 .top-row > input:focus {
   border-color: var(--resaltar);
-  /*outline: none;*/
 }
 
 /* Contenedor inferior de filtros */
 .bottom-row {
   display: flex;
-  /* margin-top: 0;*/
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
@@ -53,9 +42,6 @@
 
 .bottom-row > *:not(.date-range) {
   flex: 1 1 20%;
-  /* min-width: 140px;
-   box-sizing: border-box;
-  order: 1;*/
 }
 
 .date-range {
@@ -64,11 +50,6 @@
   gap: 0.2rem;
   font-size: 0.9rem;
   color: var(--color-terciario4);
-  /* flex: 1 1 50%;*/
-  /* min-width: 100px;
-  box-sizing: border-box;
-  order: 3;
-  max-width: 100%;*/
 }
 
 /*no se seleccione es texto*/
@@ -84,7 +65,6 @@
 /*estilo aparicion categorias*/
 .autocomplete-list {
   position: absolute;
-  /* top: 100%;*/
   left: 0;
   right: 0;
   max-height: 150px;
@@ -94,12 +74,7 @@
   border: 1px solid var(--color-principal4);
   border-top: none;
   z-index: 10;
-  /*list-style: none;
-  margin: 0;
-  padding: 0;*/
   box-shadow: 0 4px 6px var(--color-shadow2);
-  /* border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;*/
 }
 
 .autocomplete-item {
@@ -125,13 +100,9 @@
 
 select,
 .input-text {
-  /* width: 100%;*/
   padding: 0.5rem 0.8rem;
   font-size: 1rem;
   border: 1px solid var(--color-principal4);
-  /* border-radius: 4px;
-  transition: border-color 0.2s ease;
-  box-sizing: border-box;*/
 }
 
 select:focus,
@@ -144,25 +115,12 @@ select:focus,
 .selected-categories-container {
   font-size: 1rem;
   font-weight: 500;
-  /*display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: flex-start;
-  margin-top: 1rem;*/
 }
 
 .category-badge {
   display: inline-flex;
   align-items: center;
   margin: 0px 0px 5px 0px;
-  /*cursor: pointer;*/
-  /*background-color: var(--color-fondo);
-  color: var(--color-cuarto);
-  padding: 0.25rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  user-select: none;*/
 }
 
 .remove-btn {
@@ -188,24 +146,12 @@ select:focus,
   height: 36px;
   background-color: var(--color-fondo);
   color: var(--color-principal1);
-  /*border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.3s ease;
-
-  order: 3;
-  align-self: stretch;
-  flex: 0 0 auto;*/
 }
 
 .search-button:hover,
 .search-button:focus {
   background-color: var(--color-fondo);
-  /*  background-color: var(--color-principal1);*/
   color: var(--resaltar);
-  /* outline: 2px solid var(--color-fondo);*/
-  /*outline: none;*/
 }
 
 .search-header-wrapper {
@@ -217,8 +163,8 @@ select:focus,
 
 /* Botón fijo arriba derecha de la ventana */
 .upload-button {
-  position: absolute; /* fijo con respecto a la ventana */
-  top: 180px; /* abajo del header (ajustar según alto header) */
+  position: absolute;
+  top: 180px;
   right: 1rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
@@ -228,9 +174,8 @@ select:focus,
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  /*white-space: nowrap;
-  transition: background-color 0.3s ease;*/
-  z-index: 1000; /* encima de todo */
+
+  z-index: 1000;
 }
 
 .upload-button:hover,
@@ -243,16 +188,13 @@ select:focus,
 /* Título centrado con espacio arriba para que no se superponga con el botón */
 .search-header {
   position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-
+  left: 25%;
+  margin-left: -40vw;
   background-color: var(--resaltar);
   color: var(--color-principal1);
   padding: 1rem;
   box-sizing: border-box;
-  z-index: 10;
+  border-radius: 0px 10px 10px 0px;
 }
 
 /* Responsive: botón centrado debajo del título */
@@ -323,20 +265,24 @@ select:focus,
 }
 
 /* Responsive para pantallas pequeñas */
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .search-container {
-    /* padding: 1rem 0 1rem 0;*/
-    max-width: 90%;
+    max-width: 85%;
   }
 
   .date-range {
     flex: 1 1 100%;
     order: 10;
-    /* max-width: 100%;*/
+  }
+
+  .search-header {
+    position: relative;
+    left: 14%;
+    margin-left: -27vw;
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 750px) {
   .upload-button {
     width: 80%;
     right: 10%;
@@ -350,9 +296,6 @@ select:focus,
   }
 
   .search-button {
-    /* order: 10;
-    flex: 1 1 100%;
-    align-self: stretch;*/
     margin-bottom: 0.5rem;
   }
 }
@@ -364,5 +307,11 @@ select:focus,
   }
   .search-container {
     max-width: 100%;
+  }
+
+  .search-header {
+    position: relative;
+    left: 5%;
+    /* margin-left: -25vw;*/
   }
 }

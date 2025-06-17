@@ -1,10 +1,16 @@
 const { Sequelize, DataTypes } = require("sequelize");
-const dbConfig = require("../db");
+require("dotenv").config();
+//const dbConfig = require("../db");
 
-const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
-  host: dbConfig.HOST,
-  dialect: dbConfig.dialect,
-});
+const sequelize = new Sequelize(
+  process.env.DB_DATABASE,
+  process.env.DB_USER,
+  process.env.DB_PASS,
+  {
+    host: process.env.DB_HOST,
+    dialect: process.env.DB_DIALECT,
+  }
+);
 
 const db = {};
 db.Sequelize = Sequelize;
@@ -53,5 +59,32 @@ db.Usuario.belongsToMany(db.File, {
   foreignKey: "usuario_id",
   otherKey: "file_id",
 });
+
+// Intento de conexión con reintentos (no afecta la exportación)
+(async function initConnection() {
+  const maxRetries = 10;
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      await sequelize.authenticate();
+      console.log("Conectado a la base de datos");
+
+      await sequelize.sync();
+      console.log("Base de datos sincronizada");
+      break;
+    } catch (error) {
+      retries++;
+      console.error(
+        `Error conectando/sincronizando (intento ${retries}): ${error.message}`
+      );
+      if (retries === maxRetries) {
+        console.error("🚨 No se pudo conectar a la base de datos. Abortando.");
+        process.exit(1);
+      }
+      await new Promise((res) => setTimeout(res, 5000)); // espera 5s
+    }
+  }
+})();
 
 module.exports = db;

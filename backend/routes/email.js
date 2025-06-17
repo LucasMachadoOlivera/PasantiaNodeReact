@@ -10,7 +10,7 @@ async function obtenerPermisos(id) {
       include: [
         {
           model: db.Usuario,
-          where: id,
+          where: { id },
         },
       ],
     });
@@ -46,94 +46,117 @@ let transporter = nodemailer.createTransport({
   },
 });
 
+router.post("/", async (req, res, next) => {
+  const permisos = await obtenerPermisos(req.usuarioId);
+  const permitido = permisos.agusuario;
+  if (permitido) {
+    const dominio = req.body.email.split("@")[1];
+    if (dominio == "estudiantes.utec.edu.uy" || dominio == "utec.edu.uy") {
+      return next(); // Continúa con el siguiente
+    } else {
+      return res.status(401).json({ message: "Correo o Dominio incorrecto" });
+    }
+  }
+  return res.status(401).json({ message: "No se tiene permisos suficientes" });
+});
+
 //Crear un usuario
 router.post("/", async (req, res) => {
+  let userid = "";
   try {
-    const permisos = await obtenerPermisos(req.usuarioId);
-    const permitido = permisos.agusuario;
-    if (permitido) {
-      const email = req.body.email;
-      const nombre = generarUsername();
-      const contraseña = generarPassword();
-      const estado = "Validando";
-      const permiso_id = 1;
+    const email = req.body.email;
+    const nombre = generarUsername();
+    const contraseña = generarPassword();
+    //const estado = "Validando";
+    const permiso_id = 2;
+    const hashedPassword = await bcrypt.hash(contraseña, 10);
+    const nuevoUsuario = await db.Usuario.create({
+      nombre,
+      email,
+      //estado,
+      contraseña: hashedPassword,
+      permiso_id,
+    });
 
-      const hashedPassword = await bcrypt.hash(contraseña, 10);
-      const nuevoUsuario = await db.Usuario.create({
-        nombre,
-        email,
-        estado,
-        contraseña: hashedPassword,
-        permiso_id,
-      });
+    userid = nuevoUsuario.id;
 
-      db.Registro.create({
-        usuario: nuevoUsuario.id,
-        accion: "El usuario: " + nombre + " se registro",
-      });
+    await db.Registro.create({
+      usuario: nuevoUsuario.id,
+      accion: "El usuario: " + nombre + " se registro",
+    });
 
-      const mailOptions = {
-        from: emailPorpietario,
-        to: email,
-        subject: "Registro exitoso",
-        html: `<h2>¡Bienvenido, ${nombre}!</h2>
+    const mailOptions = {
+      from: emailPorpietario,
+      to: email,
+      subject: "Registro exitoso",
+      html: `<h2>¡Bienvenido, ${nombre}!</h2>
            <p>Tu cuenta ha sido creada exitosamente.</p>
            <p><b>Usuario:</b> ${nombre}</p>
            <p><b>Contraseña:</b> ${contraseña}</p>`,
-      };
+    };
 
-      await transporter.sendMail(mailOptions);
-      res.status(200).send({ message: "Correo enviado correctamente" });
-    } else {
-      throw new Error("No se tiene permisos suficientes");
-    }
+    await transporter.sendMail(mailOptions, function (err, info) {
+      if (err) {
+        res.status(500).send({ message: "Error al enviar el correo" });
+        db.Usuario.destroy({
+          where: { id: userid },
+        });
+      } else {
+        res.status(200).send({ message: "Correo enviado correctamente" });
+      }
+    });
   } catch (error) {
-    console.error(error);
     res.status(500).send({ message: "Error al enviar el correo" });
   }
 });
 
-//Resetear contraseña de cierto usuario
+router.post("/update", async (req, res, next) => {
+  const permisos = await obtenerPermisos(req.usuarioId);
+  const permitido = permisos.edusuario;
+  if (permitido) {
+    next(); // Continúa con el siguiente
+  } else {
+    return res
+      .status(401)
+      .json({ message: "No se tiene permisos suficientes" });
+  }
+});
+
+//Resetear contraseña  de cierto usuario
 router.post("/update", async (req, res) => {
   try {
-    const permisos = await obtenerPermisos(req.usuarioId);
-    const permitido = permisos.resusuario;
-    if (permitido) {
-      const id = req.body.id;
-      const email = req.body.email;
-      const nombre = req.body.nombre;
-      const contraseña = generarPassword();
+    const id = req.body.id;
+    const email = req.body.email;
+    const nombre = req.body.nombre;
+    const contraseña = generarPassword();
 
-      const hashedPassword = await bcrypt.hash(contraseña, 10);
-      const nuevoUsuario = await db.Usuario.update(
-        {
-          contraseña: hashedPassword,
-        },
-        {
-          where: { id },
-        }
-      );
+    const hashedPassword = await bcrypt.hash(contraseña, 10);
+    const nuevoUsuario = await db.Usuario.update(
+      {
+        contraseña: hashedPassword,
+      },
+      {
+        where: { id },
+      }
+    );
 
-      db.Registro.create({
-        usuario: nuevoUsuario.id,
-        accion: "El usuario: " + nombre + " se le reseteo la contraseña",
-      });
+    db.Registro.create({
+      usuario: nuevoUsuario.id,
+      accion: "El usuario: " + nombre + " se le reseteo la contraseña",
+    });
 
-      const mailOptions = {
-        from: emailPorpietario,
-        to: email,
-        subject: "Contraseña actualizada",
-        html: `<h2>¡Bienvenido, ${nombre}!</h2>
+    const mailOptions = {
+      from: emailPorpietario,
+      to: email,
+      subject: "Contraseña actualizada",
+      html: `<h2>¡Bienvenido, ${nombre}!</h2>
            <p>Tu contraseña a sido reseteada.</p>
            <p><b>Usuario:</b> ${nombre}</p>
            <p><b>Contraseña:</b> ${contraseña}</p>`,
-      };
+    };
 
-      await transporter.sendMail(mailOptions);
-      res.status(200).send({ message: "Correo enviado correctamente" });
-    } else {
-      throw new Error("No se tiene permisos suficientes");
-    }
+    await transporter.sendMail(mailOptions);
+    res.status(200).send({ message: "Correo enviado correctamente" });
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Error al enviar el correo" });

@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [opcion, setOpcion] = useState("mis-datos");
   const [archivos, setArchivos] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [categoriasCount, setCategoriasCount] = useState([]);
   const [filtros, setFiltros] = useState([]);
   const [archivosFiltrados, setArchivosFiltrados] = useState([]);
   const [archivosFiltradosPersonal, setArchivosFiltradosPersonal] = useState(
@@ -97,6 +98,7 @@ export default function Dashboard() {
 
     obtenerPermisos();
     obtenerCategorias();
+    obtenerCategoriasCount();
     listarPerfil();
     listarPerfilPersonal();
     listarPerfilCompartido();
@@ -106,9 +108,10 @@ export default function Dashboard() {
     try {
       setFiltros([]);
       obtenerCategorias();
+      obtenerCategoriasCount();
       listarPerfil();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -117,29 +120,24 @@ export default function Dashboard() {
       const response = await axios.get("/api/permisos/usuario");
       setPermisos(response.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
   const actualizarCompartir = async (user, userEmail, file, permiso) => {
     try {
-      console.log("per", user);
-      console.log("per", userEmail);
-      console.log("per", permiso);
       if (user[0] && user[0].email === userEmail && permiso) {
-        console.log("1");
         await axios.put(
           `/api/usuarios/archivo/${user[0].id}/${file}/${permiso.nombre}`
         );
-        console.log("2");
-        setMensaje("Se compartio correctamente"); // Mostrar un mensaje de error
+
+        setMensaje("Se compartio correctamente");
+        setTipoMensaje("exito");
       } else {
-        console.log("3");
         throw new Error("Email o Privilegio incorrecto");
       }
     } catch (error) {
-      console.log("4");
-      setMensaje("Invalido. Comprobar Email y Privilegio"); // Mostrar un mensaje de error
+      setMensaje("Invalido. Comprobar Email y Privilegio");
       setTipoMensaje("error");
       console.error(error);
       //throw new Error("Email o Privilegio incorrecto");
@@ -153,7 +151,7 @@ export default function Dashboard() {
 
       setArchivosFiltrados(response.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -164,7 +162,7 @@ export default function Dashboard() {
 
       setArchivosFiltradosPersonal(response.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -175,14 +173,23 @@ export default function Dashboard() {
 
       setArchivosFiltradosCompartido(response.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
   const obtenerCategorias = async () => {
     try {
-      const res = await axios.get("/api/categorias/conCantidad");
+      const res = await axios.get("/api/categorias/");
       setCategorias(res.data);
+    } catch (err) {
+      console.error("Error al cargar categorías:", err);
+    }
+  };
+
+  const obtenerCategoriasCount = async () => {
+    try {
+      const res = await axios.get("/api/categorias/conCantidad");
+      setCategoriasCount(res.data);
     } catch (err) {
       console.error("Error al cargar categorías:", err);
     }
@@ -205,7 +212,6 @@ export default function Dashboard() {
 
     try {
       const res = await axios.post("/api/files/filtrado/personal", filtro);
-      console.log("archivo personales", res.data);
       setArchivosFiltradosPersonal(res.data);
     } catch (err) {
       console.error("Error en la búsqueda:", err);
@@ -253,7 +259,6 @@ export default function Dashboard() {
 
     try {
       const res = await axios.post("/api/files/filtrado/compartido", filtro);
-      console.log("archivo compartido", res.data);
       setArchivosFiltradosCompartido(res.data);
     } catch (err) {
       console.error("Error en la búsqueda:", err);
@@ -409,6 +414,7 @@ export default function Dashboard() {
                 permisos={permisos}
                 proposito="propios"
                 compartir={actualizarCompartir}
+                usuarioDato={usuario}
               />
             </>
           )}
@@ -429,6 +435,7 @@ export default function Dashboard() {
                 permisos={permisos}
                 proposito="todos"
                 compartir={actualizarCompartir}
+                usuarioDato={usuario}
               />
             </>
           )}
@@ -449,12 +456,13 @@ export default function Dashboard() {
                 permisos={permisos}
                 proposito="compartidos"
                 compartir={actualizarCompartir}
+                usuarioDato={usuario}
               />
             </>
           )}
 
           {opcion === "categorias" && permisos.vercategoria === true && (
-            <Categorias categorias1={categorias} />
+            <Categorias categorias1={categoriasCount} />
           )}
           {opcion === "usuarios" && permisos.verusuario === true && (
             <Usuario usuario={usuario.id} />

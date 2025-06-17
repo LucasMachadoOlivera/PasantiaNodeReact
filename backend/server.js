@@ -1,16 +1,33 @@
+require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
+const mysql = require("mysql2");
 const db = require("./models");
 const path = require("path");
 const cors = require("cors");
 //require("./cron/cron");
 const passport = require("./passport/passport");
+const MySQLStore = require("express-mysql-session")(session);
+
+const mysqlOptions = {
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_DATABASE,
+};
+
+const connection = mysql.createConnection(mysqlOptions);
+
+const promiseConnection = connection.promise();
+
+const sessionStore = new MySQLStore({}, promiseConnection);
 
 const app = express();
 // Configuracion de CORS para permitir que React (cliente) se comunique con Express (servidor)
 app.use(
   cors({
-    origin: "http://localhost:5173", // puerto React está corriendo
+    origin: `http://${process.env.REACT_HOST}:${process.env.REACT_PORT}`, // puerto React está corriendo
     credentials: true, // Esto es importante para enviar las cookies
   })
 );
@@ -24,6 +41,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(
   session({
     secret: "secreto",
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -51,7 +69,6 @@ app.use(express.static(path.join(__dirname, "src/pages/public")));
 
 // Rutas
 app.post("/login", passport.authenticate("local"), (req, res) => {
-  console.log("entr al login");
   res.json({ ok: true });
 });
 
@@ -93,13 +110,16 @@ app.use("/uploads/:id", async (req, res) => {
   try {
     // Realizamos un fetch al servidor, enviando las cookies de sesión
     const id = req.params.id;
-    const response = await fetch(`http://localhost:3000/api/upload/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        cookie: req.headers.cookie, // ⬅️ reenviamos las cookies del cliente original
-      },
-    });
+    const response = await fetch(
+      `http://${process.env.HOST}:${process.env.PORT}/api/upload/${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie, // ⬅️ reenviamos las cookies del cliente original
+        },
+      }
+    );
 
     if (!response.ok) {
       return res.status(response.status).send("Error al obtener imagen");
@@ -111,7 +131,6 @@ app.use("/uploads/:id", async (req, res) => {
     // Validar si el archivo existe
     res.sendFile(filePath, (err) => {
       if (err) {
-        console.log("FALOO", filePath);
         res.status(404).send("Imagen no encontrada.");
       }
     });
@@ -125,13 +144,16 @@ app.use("/descargar/uploads/:id", async (req, res) => {
   try {
     // Realizamos un fetch al servidor, enviando las cookies de sesión
     const id = req.params.id;
-    const response = await fetch(`http://localhost:3000/api/upload/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        cookie: req.headers.cookie, // ⬅️ reenviamos las cookies del cliente original
-      },
-    });
+    const response = await fetch(
+      `http://${process.env.HOST}:${process.env.PORT}/api/upload/${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie, // ⬅️ reenviamos las cookies del cliente original
+        },
+      }
+    );
 
     if (!response.ok) {
       return res.status(response.status).send("Error al obtener imagen");
@@ -157,7 +179,7 @@ app.use("/thumbnails/:id", async (req, res) => {
     // Realizamos un fetch al servidor, enviando las cookies de sesión
     const id = req.params.id;
     const response = await fetch(
-      `http://localhost:3000/api/upload/mini/${id}`,
+      `http://${process.env.HOST}:${process.env.PORT}/api/upload/mini/${id}`,
       {
         method: "GET",
         headers: {
@@ -174,7 +196,6 @@ app.use("/thumbnails/:id", async (req, res) => {
     // Validar si el archivo existe
     res.sendFile(filePath, (err) => {
       if (err) {
-        console.log("FALOO", filePath);
         res.status(404).send("Imagen no encontrada.");
       }
     });
@@ -202,14 +223,16 @@ app.use("/api/email", emailRoute);
 db.sequelize
   .sync({ force: false })
   .then(async () => {
-    console.log("✅ Base de datos sincronizada (tablas creadas)");
+    console.log("Base de datos sincronizada (tablas creadas)");
 
-    //seedDatabase();
+    seedDatabase();
 
-    app.listen(3000, () => {
-      console.log("🚀 Servidor corriendo en http://localhost:3000");
+    app.listen(process.env.PORT, () => {
+      console.log(
+        `Servidor corriendo en http://${process.env.HOST}:${process.env.PORT}`
+      );
     });
   })
   .catch((error) => {
-    console.error("❌ Error al sincronizar la base de datos:", error);
+    console.error("Error al sincronizar la base de datos:", error);
   });

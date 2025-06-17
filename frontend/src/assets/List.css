@@ -7,7 +7,7 @@
 
 /*estilo del item listado*/
 .list-item {
-  background: var(--color-fondo5);
+  background: var(--color-principal1);
   padding: 1rem;
   min-width: 300px;
   flex: 1 1 40%;
@@ -47,8 +47,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  /* margin-left: 1rem;
-   flex-shrink: 0;*/
+  margin-left: 1rem;
+  flex-shrink: 0;
 }
 
 /*botones*/
@@ -56,11 +56,6 @@
   background-color: var(--resaltar);
   color: var(--color-principal1);
   border-radius: 4px;
-  /*padding: 0.4rem 0.8rem;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;*/
 }
 
 .list-item-buttons button:hover,
@@ -77,21 +72,19 @@
   border-radius: 12px;
   font-size: 0.8rem;
   margin-right: 0.3rem;
-  /*display: inline-block;
-   user-select: none;*/
+  display: inline-block;
+  user-select: none;
 }
 /* Responsive para pantallas pequeñas */
 @media (max-width: 1100px) {
   .list-item {
     flex-direction: column;
     align-items: center;
-    /* min-width: 100%;*/
   }
 
   .list-item-image {
     margin-bottom: 0.75rem;
     margin-right: 0;
-    /* width: 100%*/
     max-width: 60%;
     max-height: 50%;
     height: auto;
@@ -99,7 +92,6 @@
 
   .list-item-buttons {
     flex-direction: row;
-    /* margin-left: 0;*/
     gap: 1rem;
     margin-top: 0.75rem;
   }

@@ -9,15 +9,9 @@ aside.sidebar {
   padding: 1rem;
   border-radius: 20px;
   box-sizing: border-box;
-  /* transition: transform 0.3s ease;*/
   z-index: 9999;
 }
 
-aside.sidebar nav ul {
-  /* list-style: none;
-  padding: 0;
-  margin: 0;*/
-}
 aside.sidebar nav ul li {
   padding: 0.6rem 1rem;
   cursor: pointer;
@@ -35,7 +29,7 @@ main.main-content {
   padding: 1rem;
   box-sizing: border-box;
 }
-/* Botón menú móvil */
+
 .btn-menu {
   display: none;
   position: fixed;
@@ -51,8 +45,7 @@ main.main-content {
   user-select: none;
 }
 
-/* Móvil */
-@media (max-width: 700px) {
+@media (max-width: 750px) {
   .dashboard-container {
     flex-direction: column;
   }
@@ -61,7 +54,6 @@ main.main-content {
     top: 0;
     left: 0;
     height: 100vh;
-    /* z-index: 9999;*/
     background: var(--color-principal1);
     padding-top: 3.5rem;
     box-shadow: 2px 0 5px var(--color-shadow);

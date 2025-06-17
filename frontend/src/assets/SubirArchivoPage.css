@@ -2,7 +2,7 @@
 .page-container {
   min-height: 100vh;
   display: flex;
-  justify-content: center; /* centra cuando no hay listado */
+  justify-content: center;
   align-items: flex-start;
   padding: 2rem;
   gap: 2rem;

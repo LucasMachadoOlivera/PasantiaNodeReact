@@ -74,7 +74,7 @@ export default function SearchForm({
   };
   const isInicio = location.pathname === "/perfil";
   const headerStyle = {
-    width: isInicio ? "calc(100vw - 118px)" : "calc(100vw - 7px)",
+    width: isInicio ? "" : "",
   };
   return (
     <div className="search-container">

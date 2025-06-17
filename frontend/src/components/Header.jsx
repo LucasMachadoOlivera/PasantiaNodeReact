@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "./axiosConfig";
@@ -7,6 +7,7 @@ import "../assets/Header.css";
 function Header() {
   const [nombre, setNombre] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     axios
@@ -15,6 +16,7 @@ function Header() {
         if (res.data && res.data.nombre) {
           // Usuario autenticado
           setNombre(res.data);
+          if (location.pathname == "/login") navigate("/");
         } else {
           setNombre(null);
           navigate("/login");

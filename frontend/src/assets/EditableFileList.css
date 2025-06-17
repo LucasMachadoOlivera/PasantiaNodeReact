@@ -27,14 +27,10 @@
   outline: 1px solid var(--color-fondo);
   cursor: pointer;
   display: flex;
-  /*justify-content: space-between;*/
   background: var(--color-secundario6);
   gap: 1rem;
   min-height: 100px;
   align-items: flex-start;
-  /* transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  word-break: break-word;
-  position: relative;*/
 }
 
 .editable-file-item:hover {
@@ -62,7 +58,6 @@
   display: flex;
   flex-direction: column;
   background-color: var(--color-principal1);
-  /*outline: 1px solid var(--color-fondo);*/
   gap: 0.5rem;
   flex-shrink: 0;
 }
@@ -79,11 +74,6 @@
   background-color: var(--color-quinto6);
   margin-right: 0.3rem;
   display: inline-block;
-}
-
-.file-thumbnail {
-  /* width: 120px;
-  flex-shrink: 0;*/
 }
 
 .miniatura-img {
@@ -110,7 +100,7 @@
 
 .autocomplete-lists {
   position: absolute;
-  /* top: 100%;*/
+
   left: 0;
   right: 0;
   max-height: 150px;
@@ -120,12 +110,7 @@
   border: 1px solid var(--color-principal4);
   border-top: none;
   z-index: 10;
-  /* list-style: none;
-  margin: 0;
-  padding: 0;*/
   box-shadow: 0 4px 6px var(--color-shadow2);
-  /* border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;*/
 }
 
 .container-categoria {
