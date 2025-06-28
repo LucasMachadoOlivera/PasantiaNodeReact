@@ -51,7 +51,11 @@ router.post("/", async (req, res, next) => {
   const permitido = permisos.agusuario;
   if (permitido) {
     const dominio = req.body.email.split("@")[1];
-    if (dominio == "estudiantes.utec.edu.uy" || dominio == "utec.edu.uy") {
+    if (
+      dominio == "estudiantes.utec.edu.uy" ||
+      dominio == "utec.edu.uy" ||
+      dominio == "gmail.com"
+    ) {
       return next(); // Continúa con el siguiente
     } else {
       return res.status(401).json({ message: "Correo o Dominio incorrecto" });

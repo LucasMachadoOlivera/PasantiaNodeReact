@@ -6,10 +6,11 @@ export default function EditableFileList({
   archivos,
   setArchivos,
   categorias,
+  setTypeMessage,
+  setMessage,
 }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [editandoId, setEditandoId] = useState(null);
-  // const [archivodEditado, setArchivodEditado] = useState([]);
   const [editData, setEditData] = useState({});
   const [categoriaInput, setCategoriaInput] = useState("");
   const [selectedCategorias, setSelectedCategorias] = useState([]);
@@ -50,7 +51,7 @@ export default function EditableFileList({
     const nuevaFecha = new Date(archivo.fecha).toISOString().slice(0, 10);
     setEditData({ ...archivo, fecha: nuevaFecha });
 
-    setCategoriasParaQuitar([]); // reset categorias para quitar
+    setCategoriasParaQuitar([]); // reset  para quitar categorias
   };
 
   const cancelarEdicion = () => {
@@ -61,7 +62,6 @@ export default function EditableFileList({
 
   const guardarEdicion = async () => {
     const fechaConHora = new Date(editData.fecha + "T08:00:00");
-    //const formato = fechaConHora.toISOString().split("T")[0];
 
     editData.fecha = fechaConHora;
     const nuevasCats = (editData.Categoria || []).filter(
@@ -72,8 +72,12 @@ export default function EditableFileList({
 
     try {
       await axios.post("/api/files/update", archivoActualizado);
+      setMessage("Archivo actualizado");
+      setTypeMessage("exito");
     } catch (err) {
       console.error("Error en la búsqueda:", err);
+      setMessage("Error al actualizar archivo");
+      setTypeMessage("error");
     }
     setArchivos((prev) =>
       prev.map((a) => (a.id === editandoId ? archivoActualizado : a))
@@ -87,11 +91,14 @@ export default function EditableFileList({
       for (let i = 0; i < archivos.length; i++) {
         await axios.post(`/api/files/estado/true/${archivos[i].id}`);
       }
-
+      setMessage("Archivos subidos");
+      setTypeMessage("exito");
       setSelectedIds([]);
       listadoArchivos();
     } catch (error) {
-      console.error("Error al elimalmacenar file:", error);
+      console.error("Error al subir archivos:", error);
+      setMessage("Error al subir archivos");
+      setTypeMessage("error");
     }
   };
 
@@ -103,30 +110,37 @@ export default function EditableFileList({
       for (let i = 0; i < actualizarCategoria.length; i++) {
         await axios.post(`/api/files/estado/true/${actualizarCategoria[i].id}`);
       }
-
+      setMessage("Archivos subidos");
+      setTypeMessage("exito");
       setSelectedIds([]);
       listadoArchivos();
     } catch (error) {
       console.error("Error al elimalmacenar file:", error);
+      setMessage("Error al subir archivos");
+      setTypeMessage("error");
     }
   };
 
   const subirArchivo = async (archivo) => {
-    alert(`Subiendo archivo: ${archivo.nombre}`);
     try {
       await axios.post(`/api/files/estado/true/${archivo.id}`);
-
+      setMessage("Archivos subidos");
+      setTypeMessage("exito");
       setArchivos((prev) => prev.filter((a) => a.id !== archivo.id));
       setSelectedIds((prev) => prev.filter((i) => i !== archivo.id));
       listadoArchivos();
     } catch (error) {
       console.error("Error al elimalmacenar file:", error);
+      setMessage("Error al subir archivos");
+      setTypeMessage("error");
     }
   };
 
   const eliminarArchivo = async (id) => {
     try {
       const res = await axios.delete(`/api/files/${id}`);
+      setMessage("Archivo eliminado");
+      setTypeMessage("exito");
       if (res.status === 204) {
         setArchivos((prev) => prev.filter((a) => a.id !== id));
         setSelectedIds((prev) => prev.filter((i) => i !== id));
@@ -134,6 +148,8 @@ export default function EditableFileList({
       }
     } catch (error) {
       console.error("Error al eliminar file:", error);
+      setMessage("Error al eliminar archivo");
+      setTypeMessage("error");
     }
   };
 
@@ -177,12 +193,15 @@ export default function EditableFileList({
     const actualizarCategoria = nuevosArchivos.filter((archivo) =>
       selectedIds.includes(archivo.id)
     );
-
+    setMessage("Categorías agregadas");
+    setTypeMessage("exito");
     for (let i = 0; i < actualizarCategoria.length; i++) {
       try {
         await axios.post("/api/files/update", actualizarCategoria[i]);
       } catch (err) {
         console.error("Error en la búsqueda:", err);
+        setMessage("Error al agregar categorías");
+        setTypeMessage("error");
       }
     }
 
@@ -199,7 +218,6 @@ export default function EditableFileList({
       // Sacar los IDs de las categorías a eliminar
       const idsACancelar = selectedCategorias.map((cat) => cat.id);
 
-      // Filtrar las categorías actuales para eliminar las que estén en selectedCategorias
       const categoriasFiltradas = archivo.Categoria.filter(
         (cat) => !idsACancelar.includes(cat.id)
       );
@@ -217,8 +235,12 @@ export default function EditableFileList({
     for (let i = 0; i < actualizarCategoria.length; i++) {
       try {
         await axios.post("/api/files/update", actualizarCategoria[i]);
+        setMessage("Categoría/s quitada/s");
+        setTypeMessage("exito");
       } catch (err) {
         console.error("Error en la búsqueda:", err);
+        setMessage("Error al quitar categorías");
+        setTypeMessage("error");
       }
     }
 
@@ -242,9 +264,6 @@ export default function EditableFileList({
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-      // hour: "2-digit",
-      // minute: "2-digit",
-      // second: "2-digit",
       hour12: false,
     };
 
@@ -262,45 +281,45 @@ export default function EditableFileList({
           <button className="btn-subir-todo" onClick={() => subirTodoArchivo()}>
             Subir Todo
           </button>
-          <button className="btn-toggle-select" onClick={toggleSeleccionTodos}>
-            {selectedIds.length === archivos.length
-              ? "Deseleccionar todo"
-              : "Seleccionar todo"}
-          </button>
           <button
             className="btn-subir-todo"
             onClick={() => subirSeleccionadoArchivo()}
           >
             Subir Seleccionados
           </button>
+          <button className="btn-toggle-select" onClick={toggleSeleccionTodos}>
+            {selectedIds.length === archivos.length
+              ? "Deseleccionar todo"
+              : "Seleccionar todo"}
+          </button>
         </div>
       </div>
 
       <div className="categoria-bulk-wrapper">
-        <div className="selected-categories-container">
-          <strong>Categorías seleccionadas: </strong>
-          {selectedCategorias.length > 0 ? (
-            selectedCategorias.map((cat) => (
-              <span
-                key={cat.nombre}
-                className="category-badge"
-                onClick={() => removeCategoria(cat.nombre)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ")
-                    removeCategoria(cat.nombre);
-                }}
-              >
-                {cat.nombre} ×
-              </span>
-            ))
-          ) : (
-            <span className="no-categories">Ninguna</span>
-          )}
-        </div>
-
         <div className="container-categoria">
+          <div className="selected-categories-container">
+            <strong>Categorías seleccionadas: </strong>
+            {selectedCategorias.length > 0 ? (
+              selectedCategorias.map((cat) => (
+                <span
+                  key={cat.nombre}
+                  className="category-badge"
+                  onClick={() => removeCategoria(cat.nombre)}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: "pointer" }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ")
+                      removeCategoria(cat.nombre);
+                  }}
+                >
+                  {cat.nombre} ×
+                </span>
+              ))
+            ) : (
+              <span className="no-categories">Ninguna</span>
+            )}
+          </div>
           <br />
           <div
             className="autocomplete-wrapper"
@@ -352,7 +371,7 @@ export default function EditableFileList({
               selectedIds.length === 0 || selectedCategorias.length === 0
             }
           >
-            Agregar a seleccionados
+            Agregar categorías
           </button>
 
           <button
@@ -362,7 +381,7 @@ export default function EditableFileList({
               selectedIds.length === 0 || selectedCategorias.length === 0
             }
           >
-            Eliminar a seleccionados
+            Eliminar categorías
           </button>
         </div>
         <br />
@@ -408,6 +427,7 @@ export default function EditableFileList({
                   <>
                     <input
                       name="nombre"
+                      placeholder="titulo"
                       value={editData.nombre}
                       onChange={handleChange}
                       className="input-editar"
@@ -422,6 +442,7 @@ export default function EditableFileList({
                     />
                     <textarea
                       name="descripcion"
+                      placeholder="descripcion"
                       value={editData.descripcion}
                       onChange={handleChange}
                       className="textarea-editar"

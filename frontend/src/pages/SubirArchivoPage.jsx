@@ -12,14 +12,26 @@ export default function SubirArchivoPage() {
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState([]);
   const [descripcion, setDescripcion] = useState("");
   const [limpiar, setLimpiar] = useState(false);
+  const [message, setMessage] = useState("");
+  const [typeMessage, setTypeMessage] = useState(""); // 'error' o 'exito'
 
   const navigate = useNavigate();
+
+  // Limpiar mensaje después de 3 segundos
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage("");
+        setTypeMessage("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   useEffect(() => {
     axios.get("/usuario").catch(() => {
       navigate("/login");
     });
-
     obtenerCategorias();
     listadoArchivos();
   }, [navigate, archivos]);
@@ -36,7 +48,6 @@ export default function SubirArchivoPage() {
   const listadoArchivos = async () => {
     try {
       const res = await axios.get("/api/files/revisando");
-
       setArchivosList(res.data);
     } catch (err) {
       console.error("Error al cargar categorías:", err);
@@ -45,9 +56,11 @@ export default function SubirArchivoPage() {
 
   const handleAgregarFile = async (e) => {
     e.preventDefault();
-
+    setLimpiar(!limpiar);
+    setMessage("Subiendo cargado/s...");
+    setTypeMessage("exito");
     const formData = new FormData();
-    archivos.forEach((file) => formData.append("archivos", file)); // clave plural
+    archivos.forEach((file) => formData.append("archivos", file));
 
     categoriasSeleccionadas.forEach((id) => formData.append("categorias", id));
 
@@ -59,18 +72,19 @@ export default function SubirArchivoPage() {
           "Content-Type": "multipart/form-data",
         },
       });
-
-      setLimpiar(!limpiar);
-      alert("Archivo(s) subido(s) exitosamente");
       setArchivos([]);
       setCategoriasSeleccionadas([]);
+      setMessage("Archivo/s cargado/s");
+      setTypeMessage("exito");
     } catch (err) {
       console.error("Error al subir file:", err);
+      setMessage("Error al cargar archivo/s");
+      setTypeMessage("error");
     }
   };
 
   const handleArchivoChange = (e) => {
-    setArchivos(Array.from(e.target.files)); // asegurar array
+    setArchivos(Array.from(e.target.files));
   };
 
   return (
@@ -90,13 +104,25 @@ export default function SubirArchivoPage() {
           limpiar={limpiar}
         />
       </div>
+
       {archivosList.length > 0 && (
         <div className="editable-list-wrapper">
           <EditableFileList
             archivos={archivosList}
             setArchivos={setArchivosList}
             categorias={categorias}
+            setTypeMessage={setTypeMessage}
+            setMessage={setMessage}
           />
+        </div>
+      )}
+      {message && (
+        <div
+          className={`message-pop ${
+            typeMessage === "error" ? "message-error" : "message-success"
+          }`}
+        >
+          {message}
         </div>
       )}
     </div>

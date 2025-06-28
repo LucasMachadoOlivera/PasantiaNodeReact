@@ -1,9 +1,12 @@
+/* Contenedor del formulario SubirArchivo */
+
 .form-subir-archivo {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
+/* Título del formulario */
 .form-title {
   text-align: center;
 }
@@ -25,12 +28,12 @@
   border-radius: 8px;
   border: none;
   background-color: var(--color-fondo);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
 }
 
 .btn-subir-archivos:hover {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
 }
 
 /* Label categoría */

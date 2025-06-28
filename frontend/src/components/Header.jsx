@@ -5,25 +5,26 @@ import axios from "./axiosConfig";
 import "../assets/Header.css";
 
 function Header() {
-  const [nombre, setNombre] = useState(null);
+  const [nombre, setNombre] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    setNombre(false);
     axios
       .get("/usuario")
       .then((res) => {
         if (res.data && res.data.nombre) {
           // Usuario autenticado
-          setNombre(res.data);
+          setNombre(true);
           if (location.pathname == "/login") navigate("/");
         } else {
-          setNombre(null);
+          setNombre(false);
           navigate("/login");
         }
       })
       .catch(() => {
-        setNombre(null);
+        setNombre(false);
         navigate("/login");
       });
   }, [navigate]);
@@ -43,6 +44,7 @@ function Header() {
       {nombre && (
         <nav className="nav-links">
           <Link to="/">Inicio</Link>
+          <Link to="/subir-archivo">Subir archivo</Link>
           <Link to="/perfil">Perfil</Link>
           <button className="link" onClick={handleLogout}>
             Cerrar Sesión

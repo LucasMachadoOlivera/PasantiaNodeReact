@@ -1,7 +1,7 @@
 .h-login {
-  background-color: var(--resaltar); /* El color de fondo */
-  color: var(--color-principal1);
-  width: 100vw; /* 100% del ancho de la ventana */
+  background-color: var(--resaltar);
+  color: var(--color-cuarto);
+  width: 100vw;
   padding: 1rem;
   text-align: center;
 }
@@ -19,8 +19,8 @@
 .div-login {
   height: 70vh;
   display: flex;
-  justify-content: center; /* Centra horizontalmente */
-  align-items: center; /* Centra verticalmente */
+  justify-content: center;
+  align-items: center;
 }
 
 /* Estilo del formulario */
@@ -41,12 +41,12 @@ button.element-form:hover {
   border-color: black;
 }
 
-.mensaje-pop {
+.message-pop {
   position: fixed;
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
   z-index: 9999;
   padding: 12px 20px;
   border-radius: 6px;

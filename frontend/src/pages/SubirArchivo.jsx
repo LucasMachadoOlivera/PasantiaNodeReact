@@ -33,7 +33,7 @@ export default function SubirArchivo({
   const agregarCategoria = (cat) => {
     const nuevas = [...selectedCategorias, { id: cat.id, nombre: cat.nombre }];
     setSelectedCategorias(nuevas);
-    setCategoriasSeleccionadas(nuevas.map((c) => c.id)); // IDs solamente
+    setCategoriasSeleccionadas(nuevas.map((c) => c.id));
     setCategoriaInput("");
     setCategoriaDropdownVisible(false);
   };

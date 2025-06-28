@@ -1,7 +1,7 @@
 /* SearchForm Formulario */
 
 .search-container {
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
   padding: 0 0 1rem 0;
   margin: 15px auto;
   max-width: 60%;
@@ -16,7 +16,6 @@
   gap: 0.5rem;
 }
 
-/* Contenedor superior de inputs y botón */
 .top-row {
   display: flex;
   flex-wrap: wrap;
@@ -32,7 +31,6 @@
   border-color: var(--resaltar);
 }
 
-/* Contenedor inferior de filtros */
 .bottom-row {
   display: flex;
   flex-wrap: wrap;
@@ -52,17 +50,14 @@
   color: var(--color-terciario4);
 }
 
-/*no se seleccione es texto*/
 .date-range label {
   user-select: none;
 }
 
-/*aparicion de categorias*/
 .autocomplete-wrapper {
   position: relative;
 }
 
-/*estilo aparicion categorias*/
 .autocomplete-list {
   position: absolute;
   left: 0;
@@ -74,7 +69,7 @@
   border: 1px solid var(--color-principal4);
   border-top: none;
   z-index: 10;
-  box-shadow: 0 4px 6px var(--color-shadow2);
+  box-shadow: 0 4px 6px var(--color-shadow);
 }
 
 .autocomplete-item {
@@ -86,7 +81,7 @@
 .autocomplete-item:hover,
 .autocomplete-item:focus {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   outline: none;
 }
 
@@ -122,6 +117,9 @@ select:focus,
   align-items: center;
   margin: 0px 0px 5px 0px;
 }
+.category-badge button {
+  outline: none;
+}
 
 .remove-btn {
   background: transparent;
@@ -145,12 +143,13 @@ select:focus,
   padding: 0.6rem 1.2rem;
   height: 36px;
   background-color: var(--color-fondo);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
 }
 
 .search-button:hover,
 .search-button:focus {
   background-color: var(--color-fondo);
+
   color: var(--resaltar);
 }
 
@@ -161,43 +160,17 @@ select:focus,
   text-align: center;
 }
 
-/* Botón fijo arriba derecha de la ventana */
-.upload-button {
-  position: absolute;
-  top: 180px;
-  right: 1rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  min-height: 38px;
-  background-color: var(--color-fondo);
-  color: var(--color-cuarto);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-
-  z-index: 1000;
-}
-
-.upload-button:hover,
-.upload-button:focus {
-  background-color: var(--color-principal1);
-  color: var(--color-fondo);
-  outline: 2px solid var(--color-fondo);
-}
-
-/* Título centrado con espacio arriba para que no se superponga con el botón */
+/* Título centrado */
 .search-header {
   position: relative;
   left: 25%;
-  margin-left: -40vw;
+  margin-left: -22vw;
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   padding: 1rem;
   box-sizing: border-box;
-  border-radius: 0px 10px 10px 0px;
+  border-radius: 10px;
 }
-
-/* Responsive: botón centrado debajo del título */
 
 /* Contenedor del dropdown */
 select,
@@ -218,8 +191,8 @@ select,
 select:focus,
 .dropdown-display:focus {
   padding: 0.6rem 1rem;
-  border: 1px solid #ccc;
-  background-color: #fff;
+  border: 1px solid var(--color-cuarto);
+  background-color: var(--color-cuarto);
   border-radius: 4px;
   cursor: pointer;
   user-select: none;
@@ -230,7 +203,7 @@ select:focus,
 }
 
 .dropdown-display:hover {
-  border-color: #888;
+  border-color: var(--color-fondo);
 }
 
 /* Lista desplegable */
@@ -239,14 +212,14 @@ select:focus,
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #ccc;
+  background: var(--color-cuarto);
+  border: 1px solid var(--color-cuarto);
   border-radius: 4px;
   margin-top: 4px;
   padding: 0;
   list-style: none;
   z-index: 10;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px var(--color-shadow);
   max-height: 200px;
   overflow-y: auto;
 }
@@ -260,7 +233,7 @@ select:focus,
 
 .dropdown-item:hover {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   outline: none;
 }
 
@@ -283,11 +256,6 @@ select:focus,
 }
 
 @media (max-width: 750px) {
-  .upload-button {
-    width: 80%;
-    right: 10%;
-  }
-
   .top-row > input,
   .bottom-row > * {
     flex: 1 1 100%;
@@ -301,10 +269,6 @@ select:focus,
 }
 
 @media (max-width: 600px) {
-  .upload-button {
-    width: 90%;
-    right: 5%;
-  }
   .search-container {
     max-width: 100%;
   }
@@ -312,6 +276,5 @@ select:focus,
   .search-header {
     position: relative;
     left: 5%;
-    /* margin-left: -25vw;*/
   }
 }

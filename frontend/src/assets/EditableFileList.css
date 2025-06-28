@@ -1,4 +1,4 @@
-/* Contenedor principal listado de archivos */
+/* Contenedor principal listado de archivos para subir */
 
 .editable-file-list-container {
   display: flex;
@@ -15,7 +15,7 @@
   overflow-y: auto;
   max-height: 1200px;
   padding: 10px 15px;
-  background: var(--color-principal1);
+  background: var(--color-cuarto);
 }
 
 /* Item individual en listado */
@@ -27,7 +27,7 @@
   outline: 1px solid var(--color-fondo);
   cursor: pointer;
   display: flex;
-  background: var(--color-secundario6);
+  background: var(--color-cuarto);
   gap: 1rem;
   min-height: 100px;
   align-items: flex-start;
@@ -57,7 +57,7 @@
 .editable-file-buttons {
   display: flex;
   flex-direction: column;
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
   gap: 0.5rem;
   flex-shrink: 0;
 }
@@ -71,7 +71,7 @@
   border: 1px solid var(--color-terciario1);
   font-size: 0.85rem;
   color: var(--color-terciario1);
-  background-color: var(--color-quinto6);
+  background-color: var(--color-cuarto);
   margin-right: 0.3rem;
   display: inline-block;
 }
@@ -89,7 +89,7 @@
   background-color: var(--resaltar);
 }
 .categoria-quitar {
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
 }
 
 .btn-agregar,
@@ -100,7 +100,6 @@
 
 .autocomplete-lists {
   position: absolute;
-
   left: 0;
   right: 0;
   max-height: 150px;
@@ -110,11 +109,12 @@
   border: 1px solid var(--color-principal4);
   border-top: none;
   z-index: 10;
-  box-shadow: 0 4px 6px var(--color-shadow2);
+  box-shadow: 0 4px 6px var(--color-shadow);
 }
 
 .container-categoria {
-  padding: 0 1%;
+  outline: 1px solid var(--color-fondo);
+  padding: 10px 1%;
 }
 
 .btn-guardar,
@@ -129,4 +129,8 @@
 .btn-subir:hover,
 .btn-editar:hover {
   background-color: var(--color-principal4);
+}
+
+.top-bar-actions * {
+  margin: 10px;
 }

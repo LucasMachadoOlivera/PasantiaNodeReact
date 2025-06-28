@@ -1,62 +1,52 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import axios from "./../components/axiosConfig";
 import "../assets/Usuario.css";
-// Datos simulados
 
-export default function Usuario(usuario) {
+export default function Usuario({
+  permisos,
+  usuario,
+  setMessage,
+  setTypeMessage,
+}) {
   const [usuarios, setUsuarios] = useState([]);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [formData, setFormData] = useState({ nombre: "", rol: "" });
   const [registros, setRegistros] = useState([]);
-  const [permisos, setPermisos] = useState([]);
+
   const [rol, setRol] = useState([]);
   const [registrar, setRegistrar] = useState("");
 
   const [abierto, setAbierto] = useState(false);
   const [seleccionado, setSeleccionado] = useState(null);
 
-  const [mensaje, setMensaje] = useState("");
-  const [tipoMensaje, setTipoMensaje] = useState(""); // 'error' o 'exito'
+  const [anterior, setAnterior] = useState(true);
+  const [siguiente, setSiguiente] = useState(true);
 
-  // Limpiar mensaje después de 3 segundos
-  useEffect(() => {
-    if (mensaje) {
-      const timer = setTimeout(() => {
-        setMensaje("");
-        setTipoMensaje("");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [mensaje]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [cantidad] = useState(parseInt(searchParams.get("cantidad")) || 6);
+  const [paginaActual, setPaginaActual] = useState(
+    parseInt(searchParams.get("paginaActual")) || 1
+  );
 
+  const params = new URLSearchParams();
+  params.append("paginaActual", paginaActual);
+  params.append("cantidad", cantidad);
+
+  const location = useLocation();
   const navigate = useNavigate();
-  // Cargar imágenes desde el servidor
+
   useEffect(() => {
-    listaUsuarios();
-    //setUsuarios(listaCategory.data);
-    obtenerPermisos();
+    listaUsuarios(paginaActual);
     listarRoles();
   }, [navigate]);
-
-  const obtenerPermisos = async () => {
-    try {
-      const response = await axios.get("/api/permisos/usuario");
-      setPermisos(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const formatearFecha = (fecha) => {
     const opciones = {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-      // hour: "2-digit",
-      // minute: "2-digit",
-      // second: "2-digit",
       hour12: false,
     };
 
@@ -65,11 +55,26 @@ export default function Usuario(usuario) {
       .replace(",", "");
   };
 
-  const listaUsuarios = async () => {
+  const listaUsuarios = async (pagina) => {
     try {
-      const response = await axios.get("/api/usuarios");
+      const response = await axios.get("/api/usuarios", {
+        params,
+      });
+      if (location.pathname !== "/perfil/permiso/usuarios") {
+        navigate({
+          pathname: "/perfil/permiso/usuarios",
+          search: `?params=${params}`,
+        });
+      } else {
+        setSearchParams({ params });
+      }
+      setSiguiente(true);
+      setAnterior(true);
+      if (response.data.count / cantidad - pagina > 0) setSiguiente(false);
 
-      setUsuarios(response.data); // Actualizar el estado con las categorías
+      if (pagina > 1) setAnterior(false);
+
+      setUsuarios(response.data.rows);
     } catch (error) {
       console.error(error);
     }
@@ -78,7 +83,7 @@ export default function Usuario(usuario) {
   const listarRoles = async () => {
     try {
       const response = await axios.get(`/api/permisos/`);
-      setRol(response.data); // Actualizar el estado con las categorías
+      setRol(response.data);
     } catch (error) {
       console.error(error);
     }
@@ -87,8 +92,7 @@ export default function Usuario(usuario) {
   const listarRegistros = async (id) => {
     try {
       const response = await axios.get(`/api/registros/registros/${id}`);
-
-      setRegistros(response.data); // Actualizar el estado con las categorías
+      setRegistros(response.data);
     } catch (error) {
       console.error(error);
     }
@@ -110,12 +114,20 @@ export default function Usuario(usuario) {
   const handleEliminar = async () => {
     if (!usuarioSeleccionado) return;
     try {
+      const confirmar = window.confirm(
+        `¿Estás seguro de que quieres eliminar el usuario "${usuarioSeleccionado.nombre}"?`
+      );
+      if (!confirmar) {
+        // Usuario canceló, salgo de la función
+        return;
+      }
+
       await axios.delete(`/api/usuarios/${usuarioSeleccionado.id}`);
-      setMensaje("Usuario eliminado");
-      setTipoMensaje("exito");
+      setMessage("Usuario eliminado");
+      setTypeMessage("exito");
     } catch (err) {
-      setMensaje("Error: " + err);
-      setTipoMensaje("error");
+      setMessage("Error: " + err);
+      setTypeMessage("error");
     }
 
     setUsuarios(usuarios.filter((u) => u.id !== usuarioSeleccionado.id));
@@ -130,14 +142,14 @@ export default function Usuario(usuario) {
   const handleGuardar = async () => {
     try {
       await axios.put(`/api/usuarios/${usuarioSeleccionado.id}`, formData);
-      setMensaje("Usuario actualizado");
-      setTipoMensaje("exito");
+      setMessage("Usuario actualizado");
+      setTypeMessage("exito");
     } catch (err) {
-      setMensaje("Error: " + err);
-      setTipoMensaje("error");
+      setMessage("Error: " + err);
+      setTypeMessage("error");
     }
 
-    listaUsuarios();
+    listaUsuarios(paginaActual);
     setRegistros([]);
     setFormData({ nombre: "", rol: "" });
     setUsuarioSeleccionado(null);
@@ -156,12 +168,21 @@ export default function Usuario(usuario) {
   const handleResetearPassword = async () => {
     if (usuarioSeleccionado) {
       try {
+        const confirmar = window.confirm(
+          `¿Estás seguro de que quieres resetear la contraseña al usuario "${usuarioSeleccionado.nombre}"?`
+        );
+        if (!confirmar) {
+          // Usuario canceló, salgo de la función
+          return;
+        }
+        setMessage("Cambiando contraseña...");
+        setTypeMessage("exito");
         await axios.post(`/api/email/update`, usuarioSeleccionado);
-        setMensaje("Contraseña reseteada, email enviado");
-        setTipoMensaje("exito");
+        setMessage("Contraseña reseteada, email enviado");
+        setTypeMessage("exito");
       } catch (err) {
-        setMensaje("Error: " + err);
-        setTipoMensaje("error");
+        setMessage("Error: " + err);
+        setTypeMessage("error");
       }
     }
   };
@@ -174,18 +195,26 @@ export default function Usuario(usuario) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      // Hacer la solicitud de autenticación usando axios
+      setMessage("Registrando usuario...");
+      setTypeMessage("exito");
       await axios.post("/api/email/", { email: registrar });
-      setMensaje("Usuario agregado");
-      setTipoMensaje("exito");
+      setMessage("Usuario agregado");
+      setTypeMessage("exito");
+      listaUsuarios(paginaActual);
     } catch (error) {
       console.error("Error al agregar usuario:", error);
-      setMensaje("Error: " + error);
-      setTipoMensaje("error");
+      setMessage("Error: " + error);
+      setTypeMessage("error");
     }
     setRegistrar("");
+  };
+
+  const cambiarpagina = async (pagina) => {
+    params.delete("paginaActual");
+    params.append("paginaActual", pagina);
+
+    listaUsuarios(pagina);
   };
 
   return (
@@ -195,11 +224,12 @@ export default function Usuario(usuario) {
         <div className="columna-izquierda">
           {permisos?.agusuario === true && (
             <div className="usuario-register">
-              <h2>Registro</h2>
+              <h2>Nuevo usuario</h2>
               <form onSubmit={handleSubmit}>
                 <input
-                  type="text"
+                  type="email"
                   value={registrar}
+                  placeholder="Ingrese email del usuario"
                   onChange={(e) => setRegistrar(e.target.value)}
                 />
                 <button type="submit">Registar Usuario</button>
@@ -247,13 +277,6 @@ export default function Usuario(usuario) {
                         ))}
                       </ul>
                     )}
-
-                    {/* Hidden input para enviar valor si es parte de un form */}
-                    <input
-                      type="hidden"
-                      name="categoria"
-                      value={seleccionado?.id || ""}
-                    />
                   </div>
 
                   <div className="usuario-actions">
@@ -282,12 +305,14 @@ export default function Usuario(usuario) {
                         {usuarioSeleccionado.id === usuario.usuario ? (
                           <button disabled>Eliminar</button>
                         ) : (
-                          <button onClick={handleEliminar}>Eliminar</button>
+                          <button onClick={() => handleEliminar()}>
+                            Eliminar
+                          </button>
                         )}
                       </>
                     )}
                     {permisos?.edusuario === true && (
-                      <button onClick={handleResetearPassword}>
+                      <button onClick={() => handleResetearPassword()}>
                         Resetear contraseña
                       </button>
                     )}
@@ -337,6 +362,29 @@ export default function Usuario(usuario) {
         {permisos?.verusuario === true && (
           <div className="columna-derecha">
             <h3>Lista de Usuarios</h3>
+            {!(siguiente && anterior) && (
+              <div className="div-paginar">
+                <button
+                  onClick={() => {
+                    cambiarpagina(paginaActual - 1);
+                    setPaginaActual(paginaActual - 1);
+                  }}
+                  disabled={anterior}
+                >
+                  Anterior
+                </button>
+                <p>{paginaActual}</p>
+                <button
+                  onClick={() => {
+                    cambiarpagina(paginaActual + 1);
+                    setPaginaActual(paginaActual + 1);
+                  }}
+                  disabled={siguiente}
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
             <br />
             {usuarios.map((u) => (
               <div key={u.id} className="usuario-item">
@@ -352,15 +400,6 @@ export default function Usuario(usuario) {
           </div>
         )}
       </div>
-      {mensaje && (
-        <div
-          className={`mensaje-pop ${
-            tipoMensaje === "error" ? "mensaje-error" : "mensaje-exito"
-          }`}
-        >
-          {mensaje}
-        </div>
-      )}
     </>
   );
 }

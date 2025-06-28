@@ -5,7 +5,7 @@ const mysql = require("mysql2");
 const db = require("./models");
 const path = require("path");
 const cors = require("cors");
-//require("./cron/cron");
+require("./cron/cron");
 const passport = require("./passport/passport");
 const MySQLStore = require("express-mysql-session")(session);
 
@@ -85,7 +85,7 @@ app.get("/usuario", (req, res) => {
       fecha: req.user.createdAt,
     });
   } else {
-    res.status(401).json({ error: "No autenticado" });
+    res.status(404).json({ error: "No autenticado" });
   }
 });
 
@@ -225,7 +225,7 @@ db.sequelize
   .then(async () => {
     console.log("Base de datos sincronizada (tablas creadas)");
 
-    seedDatabase();
+    //seedDatabase();
 
     app.listen(process.env.PORT, () => {
       console.log(

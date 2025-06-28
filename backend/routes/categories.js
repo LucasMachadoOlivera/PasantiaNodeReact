@@ -54,7 +54,9 @@ router.post("/", async (req, res) => {
 // Obtener todas las categorías
 router.get("/", async (req, res) => {
   try {
-    const categorias = await db.Categoria.findAll();
+    const categorias = await db.Categoria.findAll({
+      attributes: ["id", "nombre"],
+    });
     res.json(categorias);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -76,7 +78,25 @@ router.get("/conCantidad", async (req, res, next) => {
 // Obtener todas las categorías con la cantidad de archivos en total
 router.get("/conCantidad", async (req, res) => {
   try {
-    const categorias = await db.Categoria.findAll({
+    const size = parseInt(req.query.cantidad);
+    const offset = (parseInt(req.query.paginaActual) - 1) * size;
+    const limit = size;
+
+    const countCategorias = await db.Categoria.findAll({
+      include: [
+        {
+          model: db.File,
+          attributes: [],
+          through: { attributes: [] },
+        },
+      ],
+      group: ["Categoria.id"],
+      raw: true,
+    });
+
+    const count = countCategorias.length;
+
+    const categoriasPaginadas = await db.Categoria.findAll({
       attributes: [
         "id",
         "nombre",
@@ -93,13 +113,53 @@ router.get("/conCantidad", async (req, res) => {
         },
       ],
       group: ["Categoria.id"],
+      limit,
+      offset,
+      subQuery: false,
       raw: true,
     });
-    res.json(categorias);
+
+    const data = categoriasPaginadas.map((categoria) => ({
+      ...categoria,
+      archivoCount: Number(categoria.archivoCount),
+    }));
+
+    res.json({
+      count,
+      data,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+/*
+router.put("/:id", async (req, res, next) => {
+  const permisos = await obtenerPermisos(req.usuarioId);
+  const permitido = permisos.edcategoria;
+  if (permitido) {
+    next(); // Continúa con el siguiente
+  } else {
+    return res
+      .status(401)
+      .json({ message: "No se tiene permisos suficientes" });
+  }
+});
+
+// Actualizar una categoría
+router.put("/:id", async (req, res) => {
+  try {
+    const { nombre } = req.body;
+    const categoria = await db.Categoria.findByPk(req.params.id);
+    if (!categoria)
+      return res.status(404).json({ error: "Categoría no encontrada" });
+
+    categoria.nombre = nombre || categoria.nombre;
+    await categoria.save();
+    res.json(categoria);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});*/
 
 router.delete("/:id", async (req, res, next) => {
   const permisos = await obtenerPermisos(req.usuarioId);

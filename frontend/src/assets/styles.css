@@ -28,24 +28,24 @@ main {
 }
 
 /* Mensaje de error */
-.mensaje-error {
+.message-error {
   margin-top: 1rem;
   color: red;
   text-align: center;
 }
 
-.mensaje-exito {
+.message-success {
   margin-top: 1rem;
   color: green;
   text-align: center;
 }
 
 button {
-  background-color: var(--color-principal1);
-  color: var(--color-secundario);
+  background-color: var(--color-cuarto);
+  color: var(--color-fondo);
 }
 
 button:hover {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
 }

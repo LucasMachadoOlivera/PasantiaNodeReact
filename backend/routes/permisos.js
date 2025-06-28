@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../models");
+const User = require("../models/User");
 
 async function obtenerPermisos(id) {
   try {
@@ -148,6 +149,7 @@ router.post("/update", async (req, res) => {
         where: { id },
       }
     );
+    res.status(200).send();
   } catch (error) {
     console.error("Error al actualizar:", error);
   }
@@ -163,7 +165,7 @@ router.delete("/:id", async (req, res, next) => {
         .status(401)
         .json({ message: "No se puede eliminar el permiso" });
     } else {
-      return next(); // Continúa con el siguiente
+      return next();
     }
   } else {
     return res
@@ -175,9 +177,18 @@ router.delete("/:id", async (req, res, next) => {
 // Eliminar Permisos
 router.delete("/:id", async (req, res) => {
   try {
+    const where = {};
+    where.permiso_id = req.params.id;
+    await db.Usuario.update(
+      { permiso_id: 2 }, //El permiso_id 2 es el Default
+      { where: where }
+    );
+
     const permiso = await db.Permiso.findByPk(req.params.id);
     if (!permiso)
       return res.status(404).json({ error: "Permiso no encontrado" });
+    /* await Producto.update({ categoriaId: 1 }, { where: { categoriaId: 5 } });
+    await Categoria.destroy({ where: { id: 5 } });*/
 
     await permiso.destroy();
     res.status(200).send();

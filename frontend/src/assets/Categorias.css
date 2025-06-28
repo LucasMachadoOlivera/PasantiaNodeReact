@@ -1,5 +1,5 @@
 .categorias-container {
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
   border: 1px solid var(--color-fondo);
   border-radius: 10px;
   display: flex;
@@ -34,7 +34,7 @@ li.selected {
 
 li.no-selected {
   outline: 1px solid var(--color-fondo);
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
 }
 
 li.selected {
@@ -45,18 +45,18 @@ li.selected {
 
 .btn-intercambiar {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   margin-bottom: 1rem;
   width: 100%;
 }
 .btn-agregar-cat {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   width: 100%;
 }
 .btn-agregar-cat:hover,
 .btn-intercambiar:hover {
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
   color: var(--resaltar);
   outline: 2px solid var(--resaltar);
 }
@@ -81,16 +81,16 @@ button:disabled:hover {
   cursor: not-allowed;
   background-color: var(--color-principal4);
   outline: none;
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
 }
 
 .btn-eliminar {
   background-color: var(--color-fondo);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
 }
 
 .btn-eliminar:hover {
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
   color: var(--color-fondo);
   outline: 1px solid var(--color-fondo);
 }
@@ -107,6 +107,11 @@ button:disabled:hover {
 
 .btn-agregar-cat {
   width: 100%;
+}
+
+.div-intercambio {
+  display: flex;
+  gap: 10px;
 }
 
 @media (max-width: 700px) {

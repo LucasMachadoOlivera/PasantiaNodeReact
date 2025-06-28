@@ -1,29 +1,21 @@
 :root {
   --background: #e9ecef;
   --resaltar: #00c7ff;
-
-  /*styles*/
-  --color-fondo: #343a40; /*fondo de botones*/ /* cambiar el fondo de categorias a uno diferente de los botones*/
-  --color-principal: #f0f0f0;
-  --color-secundario: #444c56;
   --color-terciario: #61dafb;
   --color-cuarto: white;
-  /*usuario*/
-  --color-fondo1: #ffffff;
-  --color-principal1: #fff;
-  --color-secundario1: #ddd;
-  --color-terciario1: #007bff;
+  --color-fondo: #343a40;
   --color-quinto: #28a745;
   --color-sexto: #dc3545;
-  --color-septimo: #6c757d;
   --color-shadow: rgba(0, 0, 0, 0.1);
-  /*SubirArchivoPage*/
-  --color-fondo2: #f0f2f5;
-  --color-shadow2: rgb(0 0 0 / 0.1);
+  /*styles*/
+
+  /*usuario*/
+  --color-secundario1: #ddd;
+  --color-terciario1: #007bff;
+
+  --color-septimo: #6c757d;
+
   /*SearchForm*/
   --color-principal4: #ccc;
   --color-terciario4: #555;
-  /*EditableFileList*/
-  --color-secundario6: #fafafa;
-  --color-quinto6: #e6f0ff;
 }

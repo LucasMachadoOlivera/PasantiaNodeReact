@@ -1,5 +1,5 @@
 .usuario-container {
-  background-color: var(--color-fondo1);
+  background-color: var(--color-cuarto);
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 0 5px var(--color-shadow);
@@ -20,7 +20,7 @@
   flex: 1;
   min-width: 300px;
   padding: 1rem;
-  background: var(--color-principal1);
+  background: var(--color-cuarto);
   border-radius: 8px;
   box-shadow: 0 0 5px var(--color-shadow);
 }
@@ -96,7 +96,7 @@ select {
 }
 
 .tabla-categorias th {
-  background-color: var(--color-principal);
+  background-color: var(--color-cuarto);
 }
 
 .no-registros {

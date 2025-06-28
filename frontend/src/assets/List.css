@@ -7,7 +7,7 @@
 
 /*estilo del item listado*/
 .list-item {
-  background: var(--color-principal1);
+  background: var(--color-cuarto);
   padding: 1rem;
   min-width: 300px;
   flex: 1 1 40%;
@@ -54,20 +54,20 @@
 /*botones*/
 .list-item-buttons button {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   border-radius: 4px;
 }
 
 .list-item-buttons button:hover,
 .list-item-buttons button:focus {
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
   outline: 2px solid var(--resaltar);
   color: var(--resaltar);
 }
 
 .category-badge {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   padding: 0.25rem 0.6rem;
   border-radius: 12px;
   font-size: 0.8rem;

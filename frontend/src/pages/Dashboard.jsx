@@ -1,23 +1,21 @@
 import React, { useEffect, useState } from "react";
 
-import SearchForm from "./SearchForm";
-import ArchivoList from "./ArchivoList";
+import SearchForm from "./../components/SearchForm";
+import ArchivoList from "../components/ArchivoList";
 import Categorias from "./Categorias";
 import Usuario from "./Usuario";
 import Permiso from "./Permiso";
 import Perfil from "./Perfil";
 import "../assets/Dashboard.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "./../components/axiosConfig";
-import MediaOverlay from "./MediaOverlay";
+import MediaOverlay from "../components/MediaOverlay";
 
 export default function Dashboard() {
   const { dato } = useParams();
   const navigate = useNavigate(); // Usamos el hook useNavigate para redirigir al usuario
-  const [opcion, setOpcion] = useState("mis-datos");
-  const [archivos, setArchivos] = useState([]);
+  const [opcion, setOpcion] = useState(dato || "mis-datos");
   const [categorias, setCategorias] = useState([]);
-  const [categoriasCount, setCategoriasCount] = useState([]);
   const [filtros, setFiltros] = useState([]);
   const [archivosFiltrados, setArchivosFiltrados] = useState([]);
   const [archivosFiltradosPersonal, setArchivosFiltradosPersonal] = useState(
@@ -56,19 +54,64 @@ export default function Dashboard() {
 
   const [mediaUrl, setMediaUrl] = useState(null);
 
-  const [mensaje, setMensaje] = useState("");
-  const [tipoMensaje, setTipoMensaje] = useState(""); // 'error' o 'exito'
+  const [anterior, setAnterior] = useState(true);
+  const [siguiente, setSiguiente] = useState(true);
+
+  const params = new URLSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [cantidad] = useState(parseInt(searchParams.get("cantidad")) || 16);
+  const [paginaActual, setPaginaActual] = useState(
+    parseInt(searchParams.get("paginaActual")) || 1
+  );
+
+  params.append("paginaActual", paginaActual);
+  params.append("cantidad", cantidad);
+
+  const cambiarpagina = async (pagina) => {
+    const tieneFiltros =
+      (filtros.name && filtros.name.trim() !== "") ||
+      (filtros.user && filtros.user.trim() !== "") ||
+      (filtros.tipo && filtros.tipo.trim() !== "") ||
+      (filtros.fecha_inicio && filtros.fecha_inicio.trim() !== "") ||
+      (filtros.fecha_fin && filtros.fecha_fin.trim() !== "") ||
+      (filtros.categorias && filtros.categorias.length > 0);
+
+    params.delete("paginaActual");
+    params.append("paginaActual", pagina);
+
+    if (!tieneFiltros) {
+      if (opcion == "compartidos-conmigo") {
+        listarPerfilCompartido(pagina);
+      } else if (opcion == "archivos-personal") {
+        listarPerfilPersonal(pagina);
+      } else if (opcion == "archivos") {
+        listarPerfil(pagina);
+      }
+    } else {
+      if (opcion == "compartidos-conmigo") {
+        handleBuscarCompartido(filtros);
+      } else if (opcion == "archivos-personal") {
+        handleBuscarPersonal(filtros);
+      } else if (opcion == "archivos") {
+        handleBuscar(filtros);
+      }
+    }
+  };
+
+  const [message, setMessage] = useState("");
+  const [typeMessage, setTypeMessage] = useState(""); // 'error' o 'exito'
 
   // Limpiar mensaje después de 3 segundos
   useEffect(() => {
-    if (mensaje) {
+    if (message) {
       const timer = setTimeout(() => {
-        setMensaje("");
-        setTipoMensaje("");
+        setMessage("");
+        setTypeMessage("");
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [mensaje]);
+  }, [message]);
 
   const abrirMedia = (url) => {
     setMediaUrl(url);
@@ -78,38 +121,42 @@ export default function Dashboard() {
     setMediaUrl(null);
   };
 
+  const actualizarUsuario = async () => {
+    try {
+      axios
+        .get("/usuario")
+        .then((res) => {
+          setUsuario({
+            id: res.data.id,
+            nombre: res.data.nombre,
+            email: res.data.email,
+            fecha: new Date(res.data.fecha).toISOString().split("T")[0],
+          });
+        })
+        .catch(() => {
+          navigate("/login");
+        });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     // Obtener información de usuario
-    axios
-      .get("/usuario")
-      .then((res) => {
-        setUsuario({
-          id: res.data.id,
-          nombre: res.data.nombre,
-          email: res.data.email,
-          fecha: new Date(res.data.fecha).toISOString().split("T")[0],
-        });
-      })
-      .catch(() => {
-        navigate("/login");
-      });
-
-    if (dato) setOpcion(dato);
-
+    actualizarUsuario();
     obtenerPermisos();
     obtenerCategorias();
-    obtenerCategoriasCount();
-    listarPerfil();
-    listarPerfilPersonal();
-    listarPerfilCompartido();
+    listarPerfil(paginaActual);
+    listarPerfilPersonal(paginaActual);
+    listarPerfilCompartido(paginaActual);
   }, [navigate]);
 
   const actualizar = async () => {
     try {
+      params.delete("paginaActual");
+      params.append("paginaActual", 1);
+      setPaginaActual(1);
       setFiltros([]);
-      obtenerCategorias();
-      obtenerCategoriasCount();
-      listarPerfil();
     } catch (error) {
       console.error(error);
     }
@@ -130,48 +177,73 @@ export default function Dashboard() {
         await axios.put(
           `/api/usuarios/archivo/${user[0].id}/${file}/${permiso.nombre}`
         );
-
-        setMensaje("Se compartio correctamente");
-        setTipoMensaje("exito");
+        setMessage("Se compartio correctamente");
+        setTypeMessage("exito");
       } else {
         throw new Error("Email o Privilegio incorrecto");
       }
     } catch (error) {
-      setMensaje("Invalido. Comprobar Email y Privilegio");
-      setTipoMensaje("error");
+      setMessage("Invalido. Comprobar Email y Privilegio");
+      setTypeMessage("error");
       console.error(error);
-      //throw new Error("Email o Privilegio incorrecto");
     }
   };
 
-  const listarPerfil = async () => {
+  const listarPerfil = async (pagina) => {
     try {
-      const response = await axios.get("/api/files/todo");
-      setArchivos(response.data); // Actualizar el estado con las categorías
+      if (opcion == "archivos") {
+        const response = await axios.get("/api/files/todo", {
+          params,
+        });
 
-      setArchivosFiltrados(response.data);
+        setSearchParams({ params });
+        setSiguiente(true);
+        setAnterior(true);
+        if (response.data.count / cantidad - pagina > 0) setSiguiente(false);
+
+        if (pagina > 1) setAnterior(false);
+
+        setArchivosFiltrados(response.data.rows);
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
-  const listarPerfilPersonal = async () => {
+  const listarPerfilPersonal = async (pagina) => {
     try {
-      const response = await axios.get("/api/files/perfil");
-      setArchivos(response.data); // Actualizar el estado con las categorías
+      if (opcion == "archivos-personal") {
+        const response = await axios.get("/api/files/perfil", {
+          params,
+        });
+        setSearchParams({ params });
+        setSiguiente(true);
+        setAnterior(true);
+        if (response.data.count / cantidad - pagina > 0) setSiguiente(false);
 
-      setArchivosFiltradosPersonal(response.data);
+        if (pagina > 1) setAnterior(false);
+
+        setArchivosFiltradosPersonal(response.data.rows);
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
-  const listarPerfilCompartido = async () => {
+  const listarPerfilCompartido = async (pagina) => {
     try {
-      const response = await axios.get("/api/files/perfil-compartido");
-      setArchivos(response.data); // Actualizar el estado con las categorías
+      if (opcion == "compartidos-conmigo") {
+        const response = await axios.get("/api/files/perfil-compartido", {
+          params,
+        });
+        setSearchParams({ params });
+        setSiguiente(true);
+        setAnterior(true);
+        if (response.data.count / cantidad - pagina > 0) setSiguiente(false);
 
-      setArchivosFiltradosCompartido(response.data);
+        if (pagina > 1) setAnterior(false);
+        setArchivosFiltradosCompartido(response.data.rows);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -179,87 +251,132 @@ export default function Dashboard() {
 
   const obtenerCategorias = async () => {
     try {
-      const res = await axios.get("/api/categorias/");
-      setCategorias(res.data);
-    } catch (err) {
-      console.error("Error al cargar categorías:", err);
-    }
-  };
-
-  const obtenerCategoriasCount = async () => {
-    try {
-      const res = await axios.get("/api/categorias/conCantidad");
-      setCategoriasCount(res.data);
+      if (
+        opcion == "compartidos-conmigo" ||
+        opcion == "archivos-personal" ||
+        opcion == "archivos"
+      ) {
+        const res = await axios.get("/api/categorias/");
+        setCategorias(res.data);
+      }
     } catch (err) {
       console.error("Error al cargar categorías:", err);
     }
   };
 
   const handleBuscarPersonal = async (filtro) => {
-    const tieneFiltros =
-      (filtro.name && filtro.name.trim() !== "") ||
-      (filtro.user && filtro.user.trim() !== "") ||
-      (filtro.tipo && filtro.tipo.trim() !== "") ||
-      (filtro.fecha_inicio && filtro.fecha_inicio.trim() !== "") ||
-      (filtro.fecha_fin && filtro.fecha_fin.trim() !== "") ||
-      (filtro.categorias && filtro.categorias.length > 0);
+    params.delete("name");
+    params.delete("user");
+    params.delete("tipo");
+    params.delete("fecha_inicio");
+    params.delete("fecha_fin");
+    params.delete("categorias");
 
-    if (!tieneFiltros) {
-      // No hay filtros, hacés algo: mostrar mensaje o no hacer petición
-      listarPerfilPersonal();
-      return; // Salir sin hacer la petición
+    if (filtro.name) params.append("name", filtro.name);
+    if (filtro.user) params.append("user", filtro.user);
+    if (filtro.tipo) params.append("tipo", filtro.tipo);
+    if (filtro.fecha_inicio) params.append("fecha_inicio", filtro.fecha_inicio);
+    if (filtro.fecha_fin) params.append("fecha_fin", filtro.fecha_fin);
+    if (filtro.categorias) params.append("categorias", filtro.categorias);
+
+    if (params.size == 2) {
+      // No hay filtros
+      listarPerfilPersonal(paginaActual);
+      return;
     }
-
     try {
-      const res = await axios.post("/api/files/filtrado/personal", filtro);
-      setArchivosFiltradosPersonal(res.data);
+      setSearchParams({
+        params,
+      });
+      const res = await axios.get("/api/files/filtrado/personal", {
+        params,
+      });
+      setArchivosFiltradosPersonal(res.data.rows);
+      setSiguiente(true);
+      setAnterior(true);
+      if (res.data.count / cantidad - paginaActual > 0) setSiguiente(false);
+
+      if (paginaActual > 1) setAnterior(false);
     } catch (err) {
       console.error("Error en la búsqueda:", err);
     }
   };
 
   const handleBuscar = async (filtro) => {
-    const tieneFiltros =
-      (filtro.name && filtro.name.trim() !== "") ||
-      (filtro.user && filtro.user.trim() !== "") ||
-      (filtro.tipo && filtro.tipo.trim() !== "") ||
-      (filtro.fecha_inicio && filtro.fecha_inicio.trim() !== "") ||
-      (filtro.fecha_fin && filtro.fecha_fin.trim() !== "") ||
-      (filtro.categorias && filtro.categorias.length > 0);
+    params.delete("name");
+    params.delete("user");
+    params.delete("tipo");
+    params.delete("fecha_inicio");
+    params.delete("fecha_fin");
+    params.delete("categorias");
 
-    if (!tieneFiltros) {
-      // No hay filtros, hacés algo: mostrar mensaje o no hacer petición
-      listarPerfil();
-      return; // Salir sin hacer la petición
+    if (filtro.name) params.append("name", filtro.name);
+    if (filtro.user) params.append("user", filtro.user);
+    if (filtro.tipo) params.append("tipo", filtro.tipo);
+    if (filtro.fecha_inicio) params.append("fecha_inicio", filtro.fecha_inicio);
+    if (filtro.fecha_fin) params.append("fecha_fin", filtro.fecha_fin);
+    if (filtro.categorias) params.append("categorias", filtro.categorias);
+
+    if (params.size == 2) {
+      // No hay filtros
+      listarPerfil(paginaActual);
+      return;
     }
-
     try {
-      const res = await axios.post("/api/files/filtrado/todo", filtro);
+      setSearchParams({
+        params,
+      });
 
-      setArchivosFiltrados(res.data);
+      const res = await axios.get("/api/files/filtrado/todo", {
+        params,
+      });
+
+      setArchivosFiltrados(res.data.rows);
+      setSiguiente(true);
+      setAnterior(true);
+      if (res.data.count / cantidad - paginaActual > 0) setSiguiente(false);
+
+      if (paginaActual > 1) setAnterior(false);
     } catch (err) {
       console.error("Error en la búsqueda:", err);
     }
   };
 
   const handleBuscarCompartido = async (filtro) => {
-    const tieneFiltros =
-      (filtro.name && filtro.name.trim() !== "") ||
-      (filtro.user && filtro.user.trim() !== "") ||
-      (filtro.tipo && filtro.tipo.trim() !== "") ||
-      (filtro.fecha_inicio && filtro.fecha_inicio.trim() !== "") ||
-      (filtro.fecha_fin && filtro.fecha_fin.trim() !== "") ||
-      (filtro.categorias && filtro.categorias.length > 0);
+    params.delete("name");
+    params.delete("user");
+    params.delete("tipo");
+    params.delete("fecha_inicio");
+    params.delete("fecha_fin");
+    params.delete("categorias");
 
-    if (!tieneFiltros) {
-      // No hay filtros, hacés algo: mostrar mensaje o no hacer petición
-      listarPerfilCompartido();
-      return; // Salir sin hacer la petición
+    if (filtro.name) params.append("name", filtro.name);
+    if (filtro.user) params.append("user", filtro.user);
+    if (filtro.tipo) params.append("tipo", filtro.tipo);
+    if (filtro.fecha_inicio) params.append("fecha_inicio", filtro.fecha_inicio);
+    if (filtro.fecha_fin) params.append("fecha_fin", filtro.fecha_fin);
+    if (filtro.categorias) params.append("categorias", filtro.categorias);
+
+    if (params.size == 2) {
+      // No hay filtros
+      listarPerfilCompartido(paginaActual);
+      return;
     }
 
     try {
-      const res = await axios.post("/api/files/filtrado/compartido", filtro);
-      setArchivosFiltradosCompartido(res.data);
+      setSearchParams({
+        params,
+      });
+
+      const res = await axios.get("/api/files/filtrado/compartido", {
+        params,
+      });
+      setArchivosFiltradosCompartido(res.data.rows);
+      setSiguiente(true);
+      setAnterior(true);
+      if (res.data.count / cantidad - paginaActual > 0) setSiguiente(false);
+
+      if (paginaActual > 1) setAnterior(false);
     } catch (err) {
       console.error("Error en la búsqueda:", err);
     }
@@ -397,7 +514,14 @@ export default function Dashboard() {
         </aside>
 
         <main className="main-content">
-          {opcion === "mis-datos" && <Perfil />}
+          {opcion === "mis-datos" && (
+            <Perfil
+              actualizarUsuario={actualizarUsuario}
+              usuario={usuario}
+              setMessage={setMessage}
+              setTypeMessage={setTypeMessage}
+            />
+          )}
           {opcion === "archivos-personal" && (
             <>
               <SearchForm
@@ -406,16 +530,74 @@ export default function Dashboard() {
                 setFiltros={setFiltros}
                 handleBuscar={handleBuscarPersonal}
               />
-              <ArchivoList
-                archivos={archivosFiltradosPersonal}
-                setArchivos={setArchivosFiltradosPersonal}
-                abrirMedia={abrirMedia}
-                categorias={categorias}
-                permisos={permisos}
-                proposito="propios"
-                compartir={actualizarCompartir}
-                usuarioDato={usuario}
-              />
+              {archivosFiltradosPersonal?.length > 0 ? (
+                <>
+                  {!(siguiente && anterior) && (
+                    <div className="div-paginar">
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual - 1);
+                          setPaginaActual(paginaActual - 1);
+                        }}
+                        disabled={anterior}
+                      >
+                        Anterior
+                      </button>
+                      <p>{paginaActual}</p>
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual + 1);
+                          setPaginaActual(paginaActual + 1);
+                        }}
+                        disabled={siguiente}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  )}
+                  <br />
+                  <ArchivoList
+                    archivos={archivosFiltradosPersonal}
+                    setArchivos={setArchivosFiltradosPersonal}
+                    abrirMedia={abrirMedia}
+                    categorias={categorias}
+                    permisos={permisos}
+                    proposito="propios"
+                    compartir={actualizarCompartir}
+                    usuarioDato={usuario}
+                    setMessage={setMessage}
+                    setTypeMessage={setTypeMessage}
+                  />
+                  <br />
+                  {!(siguiente && anterior) && (
+                    <div className="div-paginar">
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual - 1);
+                          setPaginaActual(paginaActual - 1);
+                        }}
+                        disabled={anterior}
+                      >
+                        Anterior
+                      </button>
+                      <p>{paginaActual}</p>
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual + 1);
+                          setPaginaActual(paginaActual + 1);
+                        }}
+                        disabled={siguiente}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="div-centrada">
+                  <p>No se encuentran archivos para visualizar</p>
+                </div>
+              )}
             </>
           )}
 
@@ -427,16 +609,74 @@ export default function Dashboard() {
                 setFiltros={setFiltros}
                 handleBuscar={handleBuscar}
               />
-              <ArchivoList
-                archivos={archivosFiltrados}
-                setArchivos={setArchivosFiltrados}
-                abrirMedia={abrirMedia}
-                categorias={categorias}
-                permisos={permisos}
-                proposito="todos"
-                compartir={actualizarCompartir}
-                usuarioDato={usuario}
-              />
+              {archivosFiltrados?.length > 0 ? (
+                <>
+                  {!(siguiente && anterior) && (
+                    <div className="div-paginar">
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual - 1);
+                          setPaginaActual(paginaActual - 1);
+                        }}
+                        disabled={anterior}
+                      >
+                        Anterior
+                      </button>
+                      <p>{paginaActual}</p>
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual + 1);
+                          setPaginaActual(paginaActual + 1);
+                        }}
+                        disabled={siguiente}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  )}
+                  <br />
+                  <ArchivoList
+                    archivos={archivosFiltrados}
+                    setArchivos={setArchivosFiltrados}
+                    abrirMedia={abrirMedia}
+                    categorias={categorias}
+                    permisos={permisos}
+                    proposito="todos"
+                    compartir={actualizarCompartir}
+                    usuarioDato={usuario}
+                    setMessage={setMessage}
+                    setTypeMessage={setTypeMessage}
+                  />
+                  <br />
+                  {!(siguiente && anterior) && (
+                    <div className="div-paginar">
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual - 1);
+                          setPaginaActual(paginaActual - 1);
+                        }}
+                        disabled={anterior}
+                      >
+                        Anterior
+                      </button>
+                      <p>{paginaActual}</p>
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual + 1);
+                          setPaginaActual(paginaActual + 1);
+                        }}
+                        disabled={siguiente}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="div-centrada">
+                  <p>No se encuentran archivos para visualizar</p>
+                </div>
+              )}
             </>
           )}
 
@@ -448,37 +688,110 @@ export default function Dashboard() {
                 setFiltros={setFiltros}
                 handleBuscar={handleBuscarCompartido}
               />
-              <ArchivoList
-                archivos={archivosFiltradosCompartido}
-                setArchivos={setArchivosFiltradosCompartido}
-                abrirMedia={abrirMedia}
-                categorias={categorias}
-                permisos={permisos}
-                proposito="compartidos"
-                compartir={actualizarCompartir}
-                usuarioDato={usuario}
-              />
+              {archivosFiltradosCompartido?.length > 0 ? (
+                <>
+                  {!(siguiente && anterior) && (
+                    <div className="div-paginar">
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual - 1);
+                          setPaginaActual(paginaActual - 1);
+                        }}
+                        disabled={anterior}
+                      >
+                        Anterior
+                      </button>
+                      <p>{paginaActual}</p>
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual + 1);
+                          setPaginaActual(paginaActual + 1);
+                        }}
+                        disabled={siguiente}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  )}
+                  <br />
+                  <ArchivoList
+                    archivos={archivosFiltradosCompartido}
+                    setArchivos={setArchivosFiltradosCompartido}
+                    abrirMedia={abrirMedia}
+                    categorias={categorias}
+                    permisos={permisos}
+                    proposito="compartidos"
+                    compartir={actualizarCompartir}
+                    usuarioDato={usuario}
+                    setMessage={setMessage}
+                    setTypeMessage={setTypeMessage}
+                  />
+                  <br />
+                  {!(siguiente && anterior) && (
+                    <div className="div-paginar">
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual - 1);
+                          setPaginaActual(paginaActual - 1);
+                        }}
+                        disabled={anterior}
+                      >
+                        Anterior
+                      </button>
+                      <p>{paginaActual}</p>
+                      <button
+                        onClick={() => {
+                          cambiarpagina(paginaActual + 1);
+                          setPaginaActual(paginaActual + 1);
+                        }}
+                        disabled={siguiente}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="div-centrada">
+                  <p>No se encuentran archivos para visualizar</p>
+                </div>
+              )}
             </>
           )}
 
           {opcion === "categorias" && permisos.vercategoria === true && (
-            <Categorias categorias1={categoriasCount} />
+            <Categorias
+              permisos={permisos}
+              setMessage={setMessage}
+              setTypeMessage={setTypeMessage}
+            />
           )}
           {opcion === "usuarios" && permisos.verusuario === true && (
-            <Usuario usuario={usuario.id} />
+            <Usuario
+              permisos={permisos}
+              usuario={usuario.id}
+              setMessage={setMessage}
+              setTypeMessage={setTypeMessage}
+            />
           )}
-          {opcion === "permisos" && permisos.verpermiso === true && <Permiso />}
+          {opcion === "permisos" && permisos.verpermiso === true && (
+            <Permiso
+              permisopropio={permisos}
+              setMessage={setMessage}
+              setTypeMessage={setTypeMessage}
+            />
+          )}
         </main>
       </div>
       {/* Mostrar overlay si hay URL */}
       {mediaUrl && <MediaOverlay url={mediaUrl} onClose={cerrarMedia} />}
-      {mensaje && (
+      {message && (
         <div
-          className={`mensaje-pop ${
-            tipoMensaje === "error" ? "mensaje-error" : "mensaje-exito"
+          className={`message-pop ${
+            typeMessage === "error" ? "message-error" : "message-success"
           }`}
         >
-          {mensaje}
+          {message}
         </div>
       )}
     </div>

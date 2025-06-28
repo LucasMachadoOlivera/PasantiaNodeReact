@@ -5,7 +5,7 @@
 }
 aside.sidebar {
   width: 220px;
-  background: var(--color-principal1);
+  background: var(--color-cuarto);
   padding: 1rem;
   border-radius: 20px;
   box-sizing: border-box;
@@ -22,14 +22,14 @@ aside.sidebar nav ul li {
 aside.sidebar nav ul li.activo,
 aside.sidebar nav ul li:hover {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
 }
 main.main-content {
   flex: 1;
   padding: 1rem;
   box-sizing: border-box;
 }
-
+/* Botón menú móvil */
 .btn-menu {
   display: none;
   position: fixed;
@@ -45,7 +45,17 @@ main.main-content {
   user-select: none;
 }
 
-@media (max-width: 750px) {
+.div-centrada {
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid var(--color-fondo);
+  background-color: var(--color-cuarto);
+  text-align: center;
+  width: 100%;
+}
+
+/* Móvil */
+@media (max-width: 850px) {
   .dashboard-container {
     flex-direction: column;
   }
@@ -54,7 +64,7 @@ main.main-content {
     top: 0;
     left: 0;
     height: 100vh;
-    background: var(--color-principal1);
+    background: var(--color-cuarto);
     padding-top: 3.5rem;
     box-shadow: 2px 0 5px var(--color-shadow);
     transform: translateX(-100%);

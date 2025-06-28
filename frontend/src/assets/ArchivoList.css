@@ -34,12 +34,12 @@
 
 .btn-compartir:hover {
   background-color: var(--resaltar);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
 }
 
 .compartir-badge {
   background-color: var(--color-fondo);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   padding: 0.25rem 0.6rem;
   border-radius: 12px;
   font-size: 0.8rem;
@@ -62,7 +62,7 @@
 }
 
 .archivo-item {
-  background: var(--color-principal1);
+  background: var(--color-cuarto);
   padding: 1rem;
   min-width: 300px;
   flex: 1 1 40%;
@@ -79,9 +79,10 @@
   flex-shrink: 0;
 }
 
+/*botones*/
 .btn-elimina {
   background-color: var(--color-fondo);
-  color: var(--color-principal1);
+  color: var(--color-cuarto);
   border-radius: 4px;
 }
 
@@ -92,7 +93,7 @@
 
 .archivo-item-buttons button:hover,
 .archivo-item-buttons button:focus {
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
   outline: 2px solid var(--resaltar);
   color: var(--resaltar);
 }
@@ -103,6 +104,7 @@
   gap: 0.5rem;
 }
 
+/* Responsive para pantallas pequeñas */
 @media (max-width: 1100px) {
   .archivo-editable-file-buttons {
     flex-direction: row;

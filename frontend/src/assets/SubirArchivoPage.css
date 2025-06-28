@@ -7,7 +7,7 @@
   padding: 2rem;
   gap: 2rem;
   box-sizing: border-box;
-  background-color: var(--color-fondo2);
+  background-color: var(--background);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -35,7 +35,7 @@
 .subir-archivo-wrapper {
   width: 350px;
   min-width: 300px;
-  background: var(--color-principal1);
+  background: var(--color-cuarto);
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 4px 12px var(--color-shadow);

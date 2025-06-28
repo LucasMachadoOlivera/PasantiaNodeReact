@@ -1,28 +1,16 @@
 import React, { useState, useEffect } from "react";
-import "../assets/Categorias.css";
+import "../assets/Permiso.css";
 import axios from "./../components/axiosConfig";
 
-export default function Categorias() {
+export default function Permiso({ permisopropio, setMessage, setTypeMessage }) {
   const [campos, setCampos] = useState([]);
-  const [permisopropio, setPermisopropio] = useState([]);
   const [permisos, setPermisos] = useState([]);
   const [nombre, setNombre] = useState([]);
   const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
-    // Obtener información de usuario
     listarPermisos();
-    obtenerPermisos();
   }, []);
-
-  const obtenerPermisos = async () => {
-    try {
-      const response = await axios.get("/api/permisos/usuario");
-      setPermisopropio(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const listarPermisos = async () => {
     try {
@@ -36,21 +24,42 @@ export default function Categorias() {
   const actualizarPermiso = async (id) => {
     try {
       const resultado = permisos.find((permiso) => permiso.id === id);
-
       await axios.post("/api/permisos/update", resultado);
-
+      setMessage("Permiso actualizado");
+      setTypeMessage("exito");
       listarPermisos();
     } catch (error) {
+      setMessage("Error al actualizar permiso");
+      setTypeMessage("error");
       console.error(error);
     }
   };
 
   const eliminarPermiso = async (id) => {
     try {
-      await axios.delete(`/api/permisos/${id}`);
+      if (editandoId === null) {
+        const confirmar = window.confirm(
+          `¿Estás seguro de que quieres eliminar el permiso "${id.nombre}"?`
+        );
+        if (!confirmar) {
+          // Usuario canceló, salgo de la función
+          return;
+        }
 
-      listarPermisos();
+        await axios.delete(`/api/permisos/${id.id}`);
+        setMessage("Permiso eliminado.");
+        setTypeMessage("exito");
+        listarPermisos();
+      } else if (editandoId === id.id) {
+        setEditandoId(null);
+        listarPermisos();
+      } else {
+        setMessage("Dejar de editar para eliminar");
+        setTypeMessage("error");
+      }
     } catch (error) {
+      setMessage("Error al eliminar permiso");
+      setTypeMessage("error");
       console.error(error);
     }
   };
@@ -65,112 +74,124 @@ export default function Categorias() {
 
   const toggleEdicion = (id) => {
     if (editandoId === id) {
-      setEditandoId(null); // Guardar (salir de modo edición)
+      setEditandoId(null);
       actualizarPermiso(id);
     } else {
-      setEditandoId(id); // Entrar en modo edición
+      setEditandoId(id);
     }
   };
 
   const nuevoPermiso = async (dato) => {
-    await axios.post("/api/permisos/", dato);
-    setNombre({ nombre: "" });
+    try {
+      await axios.post("/api/permisos/", dato);
+      setNombre({ nombre: "" });
+      setMessage("Permiso eliminado.");
+      setTypeMessage("exito");
+      listarPermisos();
+    } catch (error) {
+      setMessage("Error al eliminar permiso");
+      setTypeMessage("error");
+      console.error(error);
+    }
   };
 
   return (
     <>
-      <div className="categorias-container">
+      <div className="permiso-container">
         {permisopropio?.verpermiso === true && (
-          <div className="listado">
-            <div>
-              <h2>Agregar Permiso</h2>
-              <form>
-                <input
-                  type="text"
-                  value={nombre.nombre}
-                  onChange={(e) =>
-                    setNombre({ ...nombre, nombre: e.target.value })
-                  }
-                />
-                <button onClick={() => nuevoPermiso(nombre)}>Agregar</button>
-              </form>
-            </div>
+          <div className="permiso-listado">
+            <h2>Agregar Permiso</h2>
+
+            <input
+              type="text"
+              value={nombre.nombre}
+              placeholder="Ingrese nombre para permiso"
+              onChange={(e) => setNombre({ ...nombre, nombre: e.target.value })}
+            />
+
+            <button onClick={() => nuevoPermiso(nombre)}>Agregar</button>
+            <br />
             <br />
             <h3>Permisos</h3>
             <br />
             {permisopropio?.elpermiso === true && (
               <p>
-                Eliminar: ELIMINA TAMBIEN LOS USUARIOS CON EL PERMISO Y LOS
-                ARCHIVOS SUBIDOS POR EL USUARIO
+                Eliminar: Los usuarios pertenecientes al permiso borrado se les
+                pondran el permiso Default.
               </p>
             )}
-            <table border="1" cellPadding="5">
-              <thead>
-                <tr>
-                  <th></th>
-                  {permisos.map((permiso, index) =>
-                    index < 1 ? (
-                      <th key={"btns-" + permiso.id}></th>
-                    ) : (
-                      <th key={"btns-" + permiso.id}>
-                        {permisopropio?.edpermiso === true && (
-                          <button onClick={() => toggleEdicion(permiso.id)}>
-                            {editandoId === permiso.id ? "Guardar" : "Editar"}
-                          </button>
-                        )}
-                        <br />
-                        {permisopropio?.elpermiso === true && index > 1 && (
-                          <button onClick={() => eliminarPermiso(permiso.id)}>
-                            Eliminar
-                          </button>
-                        )}
-                      </th>
-                    )
-                  )}
-                </tr>
-                <tr>
-                  <th>Campo</th>
-                  {permisos.map((u) => (
-                    <th key={u.id}>{u.nombre}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {campos.map((campo) => (
-                  <tr key={campo}>
-                    <td>{campo.charAt(0).toUpperCase() + campo.slice(1)}</td>
-                    {permisos.map((permiso, indexPermiso) => {
-                      const esEditable = editandoId === permiso.id;
-                      const valor = permiso[campo];
-                      const color = valor ? "#c8f7c5" : "#f8d7da"; // verde o rojo claro
-                      return (
-                        <td
-                          key={permiso.id + "-" + campo}
-                          style={{ backgroundColor: color }}
-                        >
-                          {typeof valor === "boolean" && indexPermiso > 0 ? (
-                            <input
-                              type="checkbox"
-                              checked={valor}
-                              disabled={!esEditable}
-                              onChange={(e) =>
-                                manejarCambio(
-                                  permiso.id,
-                                  campo,
-                                  e.target.checked
-                                )
-                              }
-                            />
-                          ) : (
-                            <></>
+            <div className="tabla-scroll">
+              <table border="1" cellPadding="5">
+                <thead>
+                  <tr>
+                    <th></th>
+                    {permisos.map((permiso, index) =>
+                      index < 1 ? (
+                        <th key={"btns-" + permiso.id}></th>
+                      ) : (
+                        <th key={"btns-" + permiso.id}>
+                          {permisopropio?.edpermiso === true && (
+                            <button onClick={() => toggleEdicion(permiso.id)}>
+                              {editandoId === permiso.id ? "Guardar" : "Editar"}
+                            </button>
                           )}
-                        </td>
-                      );
-                    })}
+                          <br />
+                          {permisopropio?.elpermiso === true && index > 1 && (
+                            <button onClick={() => eliminarPermiso(permiso)}>
+                              {editandoId === permiso.id
+                                ? "Cancelar"
+                                : "Eliminar"}
+                            </button>
+                          )}
+                        </th>
+                      )
+                    )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                  <tr>
+                    <th>Campo</th>
+                    {permisos.map((u) => (
+                      <th key={u.id}>{u.nombre}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {campos.map((campo) => (
+                    <tr key={campo}>
+                      <td>{campo.charAt(0).toUpperCase() + campo.slice(1)}</td>
+                      {permisos.map((permiso, indexPermiso) => {
+                        const esEditable = editandoId === permiso.id;
+                        const valor = permiso[campo];
+                        const color = valor ? "#c8f7c5" : "#f8d7da";
+                        return (
+                          <td
+                            key={permiso.id + "-" + campo}
+                            style={{ backgroundColor: color }}
+                          >
+                            {typeof valor === "boolean" && indexPermiso > 0 ? (
+                              <input
+                                type="checkbox"
+                                checked={valor}
+                                disabled={!esEditable}
+                                onChange={(e) =>
+                                  manejarCambio(
+                                    permiso.id,
+                                    campo,
+                                    e.target.checked
+                                  )
+                                }
+                              />
+                            ) : (
+                              <></>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
             <br />
             <div>
               <p>
@@ -179,41 +200,48 @@ export default function Categorias() {
               </p>
               <br />
               <p>
-                Vercategoria, Agcategoria, Edcategoria, Elcategoria: Para que
-                aparezca la sección de permisos se necesita al menos
-                Vercategoria, y al tenerla, si se tiene Agcategoria se pueden
-                agregar categorías; con Edcategoría se pueden intercambiar las
-                categorías y Elcategoria para eliminar las categorías.
+                <b>Vercategoria</b>, permite ver el listado de categorias.{" "}
+                <br />
+                <b>Agcategoria</b> permite agregar categorias. <br />
+                Para usar Edcategoria y Elcategoria es necesario tener
+                Vercategoria. <br />
+                <b>Edcategoria</b> permite intercambiar una categoria usada en
+                los archivos por otra categoria diferente. <br />
+                <b>Elcategoria</b> permite quitar las categorias a borrar.
               </p>
               <br />
               <p>
-                Verarchivo, Edarchivo, Elarchivo: Para que aparezca la sección
-                de permisos se necesita al menos Verarchivo para ver todos los
-                archivos en el sistema, y al tenerlo, si se tiene Edarchivo se
-                pueden editar todos los archivos, y Elarchivo para poder
-                eliminar todos los archivos.
+                <b>Verarchivo</b>, permite ver el listado completo de todos los
+                archivos. <br />
+                Para usar Edarchivo y Elarchivo es necesario tener Verarchivo.
+                <br />
+                <b>Edarchivo</b> permite editar los archivos almacenados. <br />
+                <b>Elarchivo</b> permite quitar los archivos a borrar.
               </p>
               <br />
               <p>
-                Verusuario, Agusuario, Edusuario, Elusuario: Para que aparezca
-                la sección de permisos se necesita al menos Verusuario para ver
-                todos los usuarios, y al tenerlo, si se tiene Agusuario se
-                pueden agregar usuarios, con Edusuario se pueden editar todos
-                los usuarios y Elusuario para poder eliminar cualquier usuario.
+                <b>Verusuario</b>, permite ver el listado completo de los
+                usuarios.
+                <br />
+                <b>Agusuario</b> permite agregar usuarios.
+                <br />
+                Para usar Edusuario y Elusuario es necesario tener Verusuario.
+                <br />
+                <b>Edusuario</b> permite editar el usuario seleccionado. <br />
+                <b>Elusuario</b> permite quitar el usuario seleccionado.
               </p>
-              <br />
-              <p>Registrar: para poder generar un nuevo usuario.</p>
+
               <br />
               <p>
-                Resusuario: para poder resetear la contraseña de cualquier
-                usuario.
-              </p>
-              <br />
-              <p>
-                Verpermiso, Agpermiso, Edpermiso: Verpermiso para poder
-                visualizar la tabla de arriba, y al ya tenerlo, si se tiene
-                Agpermiso para agregar nuevos permisos, Edpermiso para editar
-                permisos.
+                <b>Verpermiso</b>, permite ver la tabla con todos los permisos
+                para los usuarios.
+                <br />
+                <b>Agpermiso</b> permite agregar nuevos permisos.
+                <br />
+                Para usar Edpermiso y Elpermiso es necesario tener Verpermiso.
+                <br />
+                <b>Edpermiso</b> permite editar el permiso seleccionado. <br />
+                <b>Elpermiso</b> permite quitar el permiso seleccionado.
               </p>
             </div>
           </div>

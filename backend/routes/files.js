@@ -79,13 +79,36 @@ async function getMiniaturePDF(pdfPath) {
 
     const outputFileName = `${baseName}-page1.jpg`;
     const outputPath1 = path.join("thumbnails", outputFileName);
+
     return outputPath1;
   } catch (error) {
-    console.error("Error al generar miniatura PDF:", error.message);
+    console.error("❌ Error al generar miniatura PDF:", error.message);
     throw error;
   }
 }
+/*
+async function getMiniaturePDF(pdfPath) {
+  const baseName = path.basename(pdfPath, path.extname(pdfPath));
+  const outputFileName = `${baseName}-1.jpg`;
+  const outputPath = path.join("thumbnails", outputFileName);
 
+  const options = {
+    format: "jpeg",
+    out_dir: path.resolve("thumbnails"),
+    out_prefix: baseName,
+    page: 1,
+  };
+
+  try {
+    await poppler.convert(pdfPath, options);
+
+    return outputPath;
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error al generar la miniatura");
+  }
+}
+*/
 async function getMiniatureVideo(videoPath) {
   const baseName = path.basename(videoPath, path.extname(videoPath));
 
@@ -221,23 +244,42 @@ router.post("/", upload.array("archivos"), async (req, res) => {
   }
 });
 
-//Listar archivos para los usuarios de forma general
+//Listar archivos para los usuarios de forma general...
 router.get("/general", async (req, res) => {
   try {
-    const files = await db.File.findAll({
+    const size = parseInt(req.query.cantidad);
+    const offset = (parseInt(req.query.paginaActual) - 1) * size;
+    const limit = size;
+
+    const files = await db.File.findAndCountAll({
+      attributes: [
+        "id",
+        "archivo",
+        "descripcion",
+        "estado",
+        "fecha",
+        "miniatura",
+        "nombre",
+        "tipo",
+      ],
       include: [
         {
           model: db.Usuario,
+          attributes: ["nombre"],
         },
         {
           model: db.Categoria,
+          attributes: ["id", "nombre"],
+          through: { attributes: [] },
         },
       ],
       where: {
         estado: "Publico",
       },
+      limit,
+      offset,
+      distinct: true,
     });
-
     res.json(files);
   } catch (error) {
     console.error("Error al obtener archivos:", error);
@@ -248,6 +290,10 @@ router.get("/general", async (req, res) => {
 //Listar archivos subidos por el usuario
 router.get("/perfil", async (req, res) => {
   try {
+    const size = parseInt(req.query.cantidad);
+    const offset = (parseInt(req.query.paginaActual) - 1) * size;
+    const limit = size;
+
     const usuario_id = req.usuarioId;
     const where = {};
 
@@ -255,7 +301,17 @@ router.get("/perfil", async (req, res) => {
       [Op.ne]: "Subiendo",
     };
     where.usuario_id = usuario_id;
-    const files = await db.File.findAll({
+    const files = await db.File.findAndCountAll({
+      attributes: [
+        "id",
+        "archivo",
+        "descripcion",
+        "estado",
+        "fecha",
+        "miniatura",
+        "nombre",
+        "tipo",
+      ],
       where: where,
       include: [
         {
@@ -266,12 +322,18 @@ router.get("/perfil", async (req, res) => {
         },
         {
           model: db.Usuario,
+          attributes: ["nombre"],
         },
 
         {
           model: db.Categoria,
+          attributes: ["id", "nombre"],
+          through: { attributes: [] },
         },
       ],
+      limit,
+      offset,
+      distinct: true,
     });
     res.json(files);
   } catch (error) {
@@ -295,9 +357,23 @@ router.get("/todo", async (req, res, next) => {
 //Listar todos los archivos publico, privado o subiendose - se requieren permisos
 router.get("/todo", async (req, res) => {
   try {
+    const size = parseInt(req.query.cantidad);
+    const offset = (parseInt(req.query.paginaActual) - 1) * size;
+    const limit = size;
+
     const usuario_id = req.usuarioId;
 
-    const files = await db.File.findAll({
+    const files = await db.File.findAndCountAll({
+      attributes: [
+        "id",
+        "archivo",
+        "descripcion",
+        "estado",
+        "fecha",
+        "miniatura",
+        "nombre",
+        "tipo",
+      ],
       include: [
         {
           model: db.Usuario,
@@ -307,12 +383,18 @@ router.get("/todo", async (req, res) => {
         },
         {
           model: db.Usuario,
+          attributes: ["nombre"],
         },
 
         {
           model: db.Categoria,
+          attributes: ["id", "nombre"],
+          through: { attributes: [] },
         },
       ],
+      limit,
+      offset,
+      distinct: true,
     });
     res.json(files);
   } catch (error) {
@@ -324,23 +406,31 @@ router.get("/todo", async (req, res) => {
 //Listar los archivos compartidos al usuario
 router.get("/perfil-compartido", async (req, res) => {
   try {
+    const size = parseInt(req.query.cantidad);
+    const offset = (parseInt(req.query.paginaActual) - 1) * size;
+    const limit = size;
+
     const usuario_id = req.usuarioId;
     const files = await db.File.findAll({
+      attributes: ["id"],
       include: [
         {
           model: db.Usuario,
           as: "UsuariosConAcceso",
           where: { id: usuario_id },
-          through: { attributes: ["file_id", "permiso", "usuario_id"] },
-          attributes: ["email"],
+          through: { attributes: [] },
+          attributes: [],
         },
 
         {
           model: db.Usuario,
+          attributes: [],
         },
 
         {
           model: db.Categoria,
+          through: { attributes: [] },
+          attributes: [],
         },
       ],
     });
@@ -350,10 +440,20 @@ router.get("/perfil-compartido", async (req, res) => {
     for (const file of files) {
       ids.push(file.id);
     }
-    const files1 = await db.File.findAll({
+    const files1 = await db.File.findAndCountAll({
       where: {
         id: ids,
       },
+      attributes: [
+        "id",
+        "archivo",
+        "descripcion",
+        "estado",
+        "fecha",
+        "miniatura",
+        "nombre",
+        "tipo",
+      ],
       include: [
         {
           model: db.Usuario,
@@ -361,14 +461,21 @@ router.get("/perfil-compartido", async (req, res) => {
           through: { attributes: ["file_id", "permiso", "usuario_id"] },
           attributes: ["email"],
         },
+
         {
           model: db.Usuario,
+          attributes: ["nombre"],
         },
 
         {
           model: db.Categoria,
+          attributes: ["id", "nombre"],
+          through: { attributes: [] },
         },
       ],
+      limit,
+      offset,
+      distinct: true,
     });
 
     res.json(files1);
@@ -383,6 +490,16 @@ router.get("/revisando", async (req, res) => {
   const usuario_id = req.usuarioId;
   try {
     const files = await db.File.findAll({
+      attributes: [
+        "id",
+        "archivo",
+        "descripcion",
+        "estado",
+        "fecha",
+        "miniatura",
+        "nombre",
+        "tipo",
+      ],
       where: {
         estado: "Subiendo",
         usuario_id,
@@ -390,9 +507,12 @@ router.get("/revisando", async (req, res) => {
       include: [
         {
           model: db.Usuario,
+          attributes: ["nombre"],
         },
         {
           model: db.Categoria,
+          attributes: ["id", "nombre"],
+          through: { attributes: [] },
         },
       ],
     });
@@ -409,7 +529,7 @@ router.get("/conAcceso/:id", async (req, res, next) => {
   if (permitido) {
     return next(); // Continúa con el siguiente
   } else {
-    const file = await db.File.findByPk(req.body.id, {
+    const file = await db.File.findByPk(req.params.id, {
       include: [
         {
           model: db.Usuario,
@@ -419,7 +539,6 @@ router.get("/conAcceso/:id", async (req, res, next) => {
         },
       ],
     });
-
     for (const nombre of file.UsuariosConAcceso) {
       if (
         nombre.File_usuario.usuario_id == req.usuarioId &&
@@ -428,7 +547,6 @@ router.get("/conAcceso/:id", async (req, res, next) => {
         return next();
       }
     }
-
     if (file.usuario_id == req.usuarioId) {
       return next();
     } else {
@@ -489,7 +607,6 @@ router.post("/update", async (req, res, next) => {
         return next();
       }
     }
-
     if (file.usuario_id == req.usuarioId) {
       return next();
     } else {
@@ -644,7 +761,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.post("/filtrado/:origen", async (req, res, next) => {
+router.get("/filtrado/:origen", async (req, res, next) => {
   if (req.params.origen === "todo") {
     const permisos = await obtenerPermisos(req.usuarioId);
     const permitido = permisos.verarchivo;
@@ -659,16 +776,21 @@ router.post("/filtrado/:origen", async (req, res, next) => {
   return next();
 });
 
-router.post("/filtrado/:origen", async (req, res) => {
+router.get("/filtrado/:origen", async (req, res) => {
   const origen = req.params.origen;
-
-  const archivo = req.body.name;
-  const usuario = req.body.user;
-  const tipo = req.body.tipo;
-  const categorias = req.body.categorias;
-  const fecha_inicio = req.body.fecha_inicio;
-  const fecha_fin = req.body.fecha_fin;
+  const archivo = req.query.name;
+  const usuario = req.query.user;
+  const tipo = req.query.tipo;
+  let categorias;
+  if (isNaN(req.query.categorias)) {
+    categorias = parseInt(req.query.categorias);
+  } else {
+    categorias = [];
+  }
+  const fecha_inicio = req.query.fecha_inicio;
+  const fecha_fin = req.query.fecha_fin;
   const usuario_id = req.usuarioId;
+
   const { Op } = require("sequelize");
 
   const where = {};
@@ -688,12 +810,15 @@ router.post("/filtrado/:origen", async (req, res) => {
       const obtenerInicioDelDia = (fecha) => {
         const f = new Date(fecha);
         f.setUTCHours(0, 0, 0, 0); // 00:00:00.000
+
         return f;
       };
 
       const obtenerFinDelDia = (fecha) => {
         const f = new Date(fecha);
+
         f.setUTCHours(23, 59, 59, 999); // 23:59:59.999
+
         return f;
       };
 
@@ -756,8 +881,10 @@ router.post("/filtrado/:origen", async (req, res) => {
     }
 
     const categoriasIds = categoriasArray.map((id) => parseInt(id));
+
     if (categoriasIds.length === 0) {
       let files;
+
       files = await db.File.findAll({
         include: [
           {
@@ -768,6 +895,7 @@ router.post("/filtrado/:origen", async (req, res) => {
         ],
         where: where,
       });
+
       ids1 = [];
       for (const file of files) {
         ids1.push(file.id);
@@ -822,10 +950,24 @@ router.post("/filtrado/:origen", async (req, res) => {
       }
     }
 
-    const files1 = await db.File.findAll({
+    const size = parseInt(req.query.cantidad);
+    const offset = (parseInt(req.query.paginaActual) - 1) * size;
+    const limit = size;
+
+    const files1 = await db.File.findAndCountAll({
       where: {
         id: ids,
       },
+      attributes: [
+        "id",
+        "archivo",
+        "descripcion",
+        "estado",
+        "fecha",
+        "miniatura",
+        "nombre",
+        "tipo",
+      ],
       include: [
         {
           model: db.Usuario,
@@ -833,15 +975,19 @@ router.post("/filtrado/:origen", async (req, res) => {
           through: { attributes: ["file_id", "permiso", "usuario_id"] },
           attributes: ["email"],
         },
-
         {
           model: db.Usuario,
+          attributes: ["nombre"],
         },
         {
           model: db.Categoria,
+          attributes: ["id", "nombre"],
           through: { attributes: [] },
         },
       ],
+      limit,
+      offset,
+      distinct: true,
     });
 
     res.json(files1);
@@ -921,7 +1067,18 @@ router.get("/borrar/:user/:file", async (req, res) => {
     const file = req.params.file;
     const usuario = await db.Usuario.findByPk(user);
     await usuario.removeFilesCompartidos(file);
-
+    /*
+      db.Registro.create({
+        usuario: req.usuarioId,
+        accion:
+          "El usuario: " +
+          req.usuarioNombre +
+          ", quito al usuario con el id: " +
+          user.id +
+          ", del documento con id " +
+          file.id,
+      });
+      */
     const where = {};
     where.id = file;
     const files = await db.File.findOne({

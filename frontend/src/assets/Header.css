@@ -1,5 +1,5 @@
 .logo-izquierda {
-  align-self: flex-start; /* mueve la imagen a la izquierda */
+  align-self: flex-start;
   width: 130px;
   height: auto;
 }
@@ -8,7 +8,7 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 1rem; /* Espacio entre los elementos */
+  gap: 1rem;
 }
 
 .h-header {
@@ -19,11 +19,11 @@
 }
 
 .link {
-  background-color: var(--color-principal1);
+  background-color: var(--color-cuarto);
 }
 
 .link:hover {
-  background-color: var(--color-secundario);
+  background-color: var(--color-fondo);
 }
 
 /* Header */

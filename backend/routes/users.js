@@ -64,12 +64,21 @@ router.get("/", async (req, res, next) => {
 //Listar los usuarios
 router.get("/", async (req, res) => {
   try {
-    const usuarios = await db.Usuario.findAll({
+    const size = parseInt(req.query.cantidad);
+    const offset = (parseInt(req.query.paginaActual) - 1) * size;
+    const limit = size;
+
+    const usuarios = await db.Usuario.findAndCountAll({
+      attributes: ["id", "nombre", "email", "permiso_id"],
       include: [
         {
           model: db.Permiso,
+          attributes: ["id", "nombre"],
         },
       ],
+      limit,
+      offset,
+      distinct: true,
     });
     res.json(usuarios);
   } catch (error) {

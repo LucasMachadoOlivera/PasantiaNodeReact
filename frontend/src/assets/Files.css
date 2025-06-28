@@ -1,0 +1,7 @@
+.div-paginar p {
+  background-color: var(--color-cuarto);
+  outline: 1px solid var(--color-fondo);
+  border-radius: 2px;
+  margin: 0px 10px;
+  padding: 6px;
+}
