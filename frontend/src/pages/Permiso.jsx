@@ -195,51 +195,45 @@ export default function Permiso({ permisopropio, setMessage, setTypeMessage }) {
             <br />
             <div>
               <p>
-                En la pestaña Perfil , en la sección de permisos, a la
-                izquierda, son afectados por:
+                En la pestaña <b>Perfil</b>, en la sección de permisos (a la
+                izquierda), estos son afectados por:
               </p>
               <br />
               <p>
-                <b>Vercategoria</b>, permite ver el listado de categorias.{" "}
-                <br />
-                <b>Agcategoria</b> permite agregar categorias. <br />
-                Para usar Edcategoria y Elcategoria es necesario tener
-                Vercategoria. <br />
-                <b>Edcategoria</b> permite intercambiar una categoria usada en
-                los archivos por otra categoria diferente. <br />
-                <b>Elcategoria</b> permite quitar las categorias a borrar.
+                <b>Vercategoria</b> permite ver el listado de categorías. <br />
+                <b>Agcategoria</b> permite agregar categorías. <br />
+                Para usar <b>Edcategoria</b> y <b>Elcategoria</b> es necesario
+                tener <b>Vercategoria</b>. <br />
+                <b>Edcategoria</b> permite intercambiar una categoría usada en
+                los archivos por otra categoría diferente. <br />
+                <b>Elcategoria</b> permite quitar las categorías a borrar.
               </p>
               <br />
               <p>
-                <b>Verarchivo</b>, permite ver el listado completo de todos los
+                <b>Verarchivo</b> permite ver el listado completo de todos los
                 archivos. <br />
-                Para usar Edarchivo y Elarchivo es necesario tener Verarchivo.
-                <br />
+                Para usar <b>Edarchivo</b> y <b>Elarchivo</b> es necesario tener{" "}
+                <b>Verarchivo</b>. <br />
                 <b>Edarchivo</b> permite editar los archivos almacenados. <br />
                 <b>Elarchivo</b> permite quitar los archivos a borrar.
               </p>
               <br />
               <p>
-                <b>Verusuario</b>, permite ver el listado completo de los
-                usuarios.
-                <br />
-                <b>Agusuario</b> permite agregar usuarios.
-                <br />
-                Para usar Edusuario y Elusuario es necesario tener Verusuario.
-                <br />
+                <b>Verusuario</b> permite ver el listado completo de los
+                usuarios. <br />
+                <b>Agusuario</b> permite agregar usuarios. <br />
+                Para usar <b>Edusuario</b> y <b>Elusuario</b> es necesario tener{" "}
+                <b>Verusuario</b>. <br />
                 <b>Edusuario</b> permite editar el usuario seleccionado. <br />
                 <b>Elusuario</b> permite quitar el usuario seleccionado.
               </p>
-
               <br />
               <p>
-                <b>Verpermiso</b>, permite ver la tabla con todos los permisos
-                para los usuarios.
-                <br />
-                <b>Agpermiso</b> permite agregar nuevos permisos.
-                <br />
-                Para usar Edpermiso y Elpermiso es necesario tener Verpermiso.
-                <br />
+                <b>Verpermiso</b> permite ver la tabla con todos los permisos
+                para los usuarios. <br />
+                <b>Agpermiso</b> permite agregar nuevos permisos. <br />
+                Para usar <b>Edpermiso</b> y <b>Elpermiso</b> es necesario tener{" "}
+                <b>Verpermiso</b>. <br />
                 <b>Edpermiso</b> permite editar el permiso seleccionado. <br />
                 <b>Elpermiso</b> permite quitar el permiso seleccionado.
               </p>

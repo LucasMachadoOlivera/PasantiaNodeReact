@@ -33,6 +33,15 @@ cron.schedule("0 0 * * *", async () => {
           }
         });
       }
+      const rutaMiniatura = path.join(__dirname, "..", file.miniatura);
+      if (fs.existsSync(rutaMiniatura)) {
+        fs.unlink(rutaMiniatura, (err) => {
+          if (err) {
+            console.error("Error al eliminar el archivo:", err);
+          }
+        });
+      }
+
       await file.destroy();
     }
   } catch (error) {

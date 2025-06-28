@@ -4,9 +4,7 @@ const path = require("path");
 const db = require("../models");
 const fs = require("fs");
 
-const { createCanvas } = require("canvas");
-const sharp = require("sharp");
-
+const { exec } = require("child_process");
 const ffmpeg = require("fluent-ffmpeg");
 const router = express.Router();
 const { Op } = require("sequelize");
@@ -30,62 +28,32 @@ async function obtenerPermisos(id) {
 
 // Función para generar miniatura desde PDF
 async function getMiniaturePDF(pdfPath) {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const outputDir = path.resolve("thumbnails");
+  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
-  const data = new Uint8Array(fs.readFileSync(pdfPath));
+  const baseName = path.basename(pdfPath, path.extname(pdfPath));
+  const outputPrefix = path.join(outputDir, baseName + "-thumb");
 
-  const loadingTask = pdfjsLib.getDocument({ data });
+  return new Promise((resolve, reject) => {
+    const cmd = `pdftoppm -jpeg -f 1 -singlefile "${pdfPath}" "${outputPrefix}"`;
 
-  try {
-    const pdfDocument = await loadingTask.promise;
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error(
+          "Error al generar miniatura PDF:",
+          stderr || error.message
+        );
+        reject(error);
+        return;
+      }
 
-    if (pdfDocument.numPages === 0) {
-      throw new Error("El PDF no contiene páginas.");
-    }
+      const outputFilePath = outputPrefix + ".jpg";
 
-    const page = await pdfDocument.getPage(1);
-    const viewport = page.getViewport({ scale: 2 });
-
-    if (viewport.width === 0 || viewport.height === 0) {
-      throw new Error("La primera página no tiene contenido visible.");
-    }
-
-    const canvas = createCanvas(viewport.width, viewport.height);
-    const context = canvas.getContext("2d");
-
-    const renderContext = {
-      canvasContext: context,
-      viewport: viewport,
-    };
-
-    await page.render(renderContext).promise;
-
-    const pngBuffer = canvas.toBuffer("image/png");
-
-    const jpgBuffer = await sharp(pngBuffer)
-      .resize({ width: 300 })
-      .jpeg({ quality: 80 })
-      .toBuffer();
-
-    const thumbnailsDir = path.resolve("thumbnails");
-    if (!fs.existsSync(thumbnailsDir)) {
-      fs.mkdirSync(thumbnailsDir);
-    }
-
-    const baseName = path.basename(pdfPath, path.extname(pdfPath));
-    const outputPath = path.join(thumbnailsDir, `${baseName}-page1.jpg`);
-
-    fs.writeFileSync(outputPath, jpgBuffer);
-
-    const outputFileName = `${baseName}-page1.jpg`;
-    const outputPath1 = path.join("thumbnails", outputFileName);
-
-    return outputPath1;
-  } catch (error) {
-    console.error("❌ Error al generar miniatura PDF:", error.message);
-    throw error;
-  }
+      resolve(path.join("thumbnails", path.basename(outputFilePath)));
+    });
+  });
 }
+
 /*
 async function getMiniaturePDF(pdfPath) {
   const baseName = path.basename(pdfPath, path.extname(pdfPath));
@@ -199,8 +167,10 @@ router.post("/", upload.array("archivos"), async (req, res) => {
       const tiposVideo = ["mp4", "avi", "mov", "mkv"];
 
       if (tiposPdf.includes(tipo)) {
+        console.log("cargaarchivo pdf");
         miniatura = await getMiniaturePDF(archivo.path);
       } else if (tiposVideo.includes(tipo)) {
+        console.log("cargaarchivo video");
         miniatura = await getMiniatureVideo(archivo.path);
       } else if (tipo == "zip") {
       } else {
@@ -745,6 +715,15 @@ router.delete("/:id", async (req, res) => {
         }
       });
     }
+    const rutaMiniatura = path.join(__dirname, "..", file.miniatura);
+    if (fs.existsSync(rutaMiniatura)) {
+      fs.unlink(rutaMiniatura, (err) => {
+        if (err) {
+          console.error("Error al eliminar el archivo:", err);
+        }
+      });
+    }
+
     db.Registro.create({
       usuario: usuario_id,
       accion:

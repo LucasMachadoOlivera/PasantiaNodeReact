@@ -52,7 +52,7 @@ export default function SearchForm({
     await handleBuscar(nuevoFiltro);
   };
 
-  const opciones = ["ninguna", "pdf", "epub", "mobi", "doc", "jpg"];
+  const opciones = ["ninguna", "pdf", "mp4", "mkv", "png", "jpg", "svg"];
 
   const seleccionar = (opcion) => {
     const tipo = opcion;
