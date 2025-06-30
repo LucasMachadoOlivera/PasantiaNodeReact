@@ -111,7 +111,7 @@ app.use("/uploads/:id", async (req, res) => {
     // Realizamos un fetch al servidor, enviando las cookies de sesión
     const id = req.params.id;
     const response = await fetch(
-      `http://${process.env.HOST}:${process.env.PORT}/api/upload/${id}`,
+      `http://localhost:${process.env.PORT}/api/upload/${id}`,
       {
         method: "GET",
         headers: {
@@ -145,7 +145,7 @@ app.use("/descargar/uploads/:id", async (req, res) => {
     // Realizamos un fetch al servidor, enviando las cookies de sesión
     const id = req.params.id;
     const response = await fetch(
-      `http://${process.env.HOST}:${process.env.PORT}/api/upload/${id}`,
+      `http://localhost:${process.env.PORT}/api/upload/${id}`,
       {
         method: "GET",
         headers: {
@@ -179,7 +179,7 @@ app.use("/thumbnails/:id", async (req, res) => {
     // Realizamos un fetch al servidor, enviando las cookies de sesión
     const id = req.params.id;
     const response = await fetch(
-      `http://${process.env.HOST}:${process.env.PORT}/api/upload/mini/${id}`,
+      `http://localhost:${process.env.PORT}/api/upload/mini/${id}`,
       {
         method: "GET",
         headers: {
@@ -221,16 +221,14 @@ app.use("/api/email", emailRoute);
 
 // Sincroniza la base de datos
 db.sequelize
-  .sync({ force: false })
+  .sync({ force: false }) //para resetear cambiar a true
   .then(async () => {
     console.log("Base de datos sincronizada (tablas creadas)");
 
-    //seedDatabase();
+    seedDatabase();
 
     app.listen(process.env.PORT, () => {
-      console.log(
-        `Servidor corriendo en http://${process.env.HOST}:${process.env.PORT}`
-      );
+      console.log(`Servidor corriendo en http://localhost:${process.env.PORT}`);
     });
   })
   .catch((error) => {

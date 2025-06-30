@@ -187,8 +187,6 @@ router.delete("/:id", async (req, res) => {
     const permiso = await db.Permiso.findByPk(req.params.id);
     if (!permiso)
       return res.status(404).json({ error: "Permiso no encontrado" });
-    /* await Producto.update({ categoriaId: 1 }, { where: { categoriaId: 5 } });
-    await Categoria.destroy({ where: { id: 5 } });*/
 
     await permiso.destroy();
     res.status(200).send();

@@ -54,29 +54,6 @@ async function getMiniaturePDF(pdfPath) {
   });
 }
 
-/*
-async function getMiniaturePDF(pdfPath) {
-  const baseName = path.basename(pdfPath, path.extname(pdfPath));
-  const outputFileName = `${baseName}-1.jpg`;
-  const outputPath = path.join("thumbnails", outputFileName);
-
-  const options = {
-    format: "jpeg",
-    out_dir: path.resolve("thumbnails"),
-    out_prefix: baseName,
-    page: 1,
-  };
-
-  try {
-    await poppler.convert(pdfPath, options);
-
-    return outputPath;
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error al generar la miniatura");
-  }
-}
-*/
 async function getMiniatureVideo(videoPath) {
   const baseName = path.basename(videoPath, path.extname(videoPath));
 
@@ -167,10 +144,8 @@ router.post("/", upload.array("archivos"), async (req, res) => {
       const tiposVideo = ["mp4", "avi", "mov", "mkv"];
 
       if (tiposPdf.includes(tipo)) {
-        console.log("cargaarchivo pdf");
         miniatura = await getMiniaturePDF(archivo.path);
       } else if (tiposVideo.includes(tipo)) {
-        console.log("cargaarchivo video");
         miniatura = await getMiniatureVideo(archivo.path);
       } else if (tipo == "zip") {
       } else {
@@ -195,15 +170,6 @@ router.post("/", upload.array("archivos"), async (req, res) => {
           : JSON.parse(categorias);
         await arch.addCategoria(catIds);
       }
-
-      db.Registro.create({
-        log_id: req.usuarioId,
-        accion:
-          "El usuario: " +
-          req.usuarioNombre +
-          ", esta subiendo el archivo con el id: " +
-          arch.id,
-      });
     }
     res.json({
       message: "Formulario recibido correctamente",
@@ -665,14 +631,6 @@ router.post("/estado/true/:id", upload.none(), async (req, res) => {
       }
     );
 
-    db.Registro.create({
-      usuario: req.usuarioId,
-      accion:
-        "El usuario: " +
-        req.usuarioNombre +
-        ", termino de subir el archivo con el id: " +
-        id,
-    });
     res.json({
       message: "Datos recibidos correctamente",
     });
@@ -1023,7 +981,7 @@ router.get("/borrar/:user/:file", async (req, res, next) => {
       if (
         nombre.File_usuario.usuario_id == req.usuarioId &&
         nombre.File_usuario.permiso == "Editor" &&
-        req.params.user !== req.usuarioId
+        req.params.user != req.usuarioId
       ) {
         return next();
       }
@@ -1046,18 +1004,7 @@ router.get("/borrar/:user/:file", async (req, res) => {
     const file = req.params.file;
     const usuario = await db.Usuario.findByPk(user);
     await usuario.removeFilesCompartidos(file);
-    /*
-      db.Registro.create({
-        usuario: req.usuarioId,
-        accion:
-          "El usuario: " +
-          req.usuarioNombre +
-          ", quito al usuario con el id: " +
-          user.id +
-          ", del documento con id " +
-          file.id,
-      });
-      */
+
     const where = {};
     where.id = file;
     const files = await db.File.findOne({

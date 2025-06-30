@@ -142,6 +142,7 @@ export default function Usuario({
   const handleGuardar = async () => {
     try {
       await axios.put(`/api/usuarios/${usuarioSeleccionado.id}`, formData);
+
       setMessage("Usuario actualizado");
       setTypeMessage("exito");
     } catch (err) {

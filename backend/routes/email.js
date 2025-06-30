@@ -82,7 +82,15 @@ router.post("/", async (req, res) => {
 
     await db.Registro.create({
       usuario: nuevoUsuario.id,
-      accion: "El usuario: " + nombre + " se registro",
+      accion:
+        "El usuario: " +
+        userid +
+        " : " +
+        nombre +
+        " se registro por " +
+        req.usuarioId +
+        " : " +
+        req.usuarioNombre,
     });
 
     const mailOptions = {
@@ -142,7 +150,15 @@ router.post("/update", async (req, res) => {
 
     db.Registro.create({
       usuario: nuevoUsuario.id,
-      accion: "El usuario: " + nombre + " se le reseteo la contraseña",
+      accion:
+        "El usuario: " +
+        userid +
+        " : " +
+        nombre +
+        " se le reseteo la contraseña por " +
+        req.usuarioId +
+        " : " +
+        req.usuarioNombre,
     });
 
     const mailOptions = {

@@ -89,7 +89,8 @@ router.get("/", async (req, res) => {
 router.delete("/:id", async (req, res, next) => {
   const permisos = await obtenerPermisos(req.usuarioId);
   const permitido = permisos.elusuario;
-  if (permitido) {
+
+  if (permitido && req.usuarioId != req.params.id) {
     next(); // Continúa con el siguiente
   } else {
     return res
@@ -105,8 +106,17 @@ router.delete("/:id", async (req, res) => {
     const usuario = await db.Usuario.findByPk(id);
 
     if (!usuario) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+      return res.status(401).json({ error: "Usuario no encontrado" });
     }
+
+    if (usuario.permiso_id === 1) {
+      if (req.user.permiso_id !== 1) {
+        return res
+          .status(401)
+          .json({ error: "No se tiene permisos suficientes, es Admin." });
+      }
+    }
+
     db.Registro.create({
       usuario: req.usuarioId,
       accion:
@@ -117,6 +127,7 @@ router.delete("/:id", async (req, res) => {
         ", llamado " +
         usuario.nombre,
     });
+
     await usuario.destroy();
     res.json({ mensaje: "Usuario eliminado" });
   } catch (error) {
@@ -187,18 +198,6 @@ router.put("/archivo/:user/:file/:permiso", async (req, res) => {
       through: { permiso: permiso },
     });
 
-    db.Registro.create({
-      usuario: req.usuarioId,
-      accion:
-        "El usuario: " +
-        req.usuarioNombre +
-        ", compartio el archivo " +
-        archivo.id +
-        ", llamado " +
-        archivo.nombre +
-        " a " +
-        usuario.id,
-    });
     res.json(usuario);
   } catch (error) {
     res
@@ -210,16 +209,15 @@ router.put("/archivo/:user/:file/:permiso", async (req, res) => {
 router.put("/:id", async (req, res, next) => {
   const permisos = await obtenerPermisos(req.usuarioId);
   const permitido = permisos.edusuario;
+
   if (permitido) {
     return next(); // Continúa con el siguiente
-  } else {
-    if (req.params.id == req.usuarioId && !req.body.rol) {
-      return next();
-    }
-    return res
-      .status(401)
-      .json({ message: "No se tiene permisos suficientes" });
   }
+  if (req.params.id == req.usuarioId) {
+    return next();
+  }
+
+  return res.status(401).json({ message: "No se tiene permisos suficientes" });
 });
 
 //Actualizar un usuario por ID
@@ -227,46 +225,71 @@ router.put("/:id", async (req, res) => {
   try {
     const usuario_id = req.usuarioId;
 
-    const { nombre, contraseña, rol } = req.body;
+    const { nombre, rol, contraseña } = req.body;
     const id = req.params.id;
     const usuario = await db.Usuario.findByPk(id);
+    let guardar = false;
 
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    if (nombre) {
+    if (nombre && nombre != usuario.nombre) {
       if (nombre.length > 3) {
         usuario.nombre = nombre;
+        guardar = true;
       } else {
         return res.status(401).json({ message: "Nombre invalida" });
       }
     }
 
-    if (rol && usuario_id != id) {
+    if (rol && rol != usuario.permiso_id) {
+      if (usuario_id == id) {
+        return res
+          .status(404)
+          .json({ error: "No se puede editar el propio Rol." });
+      }
+      if (usuario.permiso_id === 1) {
+        if (req.user.permiso_id != 1) {
+          return res
+            .status(404)
+            .json({ error: "No se tiene permisos suficientes, es Admin." });
+        }
+      }
+      if (rol === 1 && req.user.permiso_id != 1) {
+        return res
+          .status(404)
+          .json({ error: "No se tiene permisos suficientes, es Admin." });
+      }
       usuario.permiso_id = rol;
+      guardar = true;
     }
-    if (contraseña) {
+
+    if (contraseña && id == req.usuarioId) {
       if (contraseña.length > 6) {
         const hashedPassword = await bcrypt.hash(contraseña, 10);
         usuario.contraseña = hashedPassword;
+        guardar = true;
       } else {
         return res.status(401).json({ message: "Contraseña invalida" });
       }
     }
 
-    await usuario.save();
-    db.Registro.create({
-      usuario: req.usuarioId,
-      accion:
-        "El usuario: " +
-        req.usuarioNombre +
-        ", actualizo el usuario con el id: " +
-        usuario.id +
-        ", llamado " +
-        usuario.nombre,
-    });
-    res.json(usuario);
+    if (guardar) {
+      await usuario.save();
+      db.Registro.create({
+        usuario: req.usuarioId,
+        accion:
+          "El usuario: " +
+          req.usuarioNombre +
+          ", actualizo el usuario con el id: " +
+          usuario.id +
+          ", llamado " +
+          usuario.nombre,
+      });
+      return res.json(usuario);
+    }
+    res.status(401).json({ error: "No hay datos" });
   } catch (error) {
     res
       .status(500)

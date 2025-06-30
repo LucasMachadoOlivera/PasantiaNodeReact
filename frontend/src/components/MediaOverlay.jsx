@@ -4,10 +4,10 @@ import "../assets/MediaOverlay.css";
 const getFileType = (url) => {
   const extension = url.split(".").pop().toLowerCase();
 
-  if (["mp4", "webm", "ogg"].includes(extension)) return "video";
+  if (["mp4", "webm", "ogg", "mkv"].includes(extension)) return "video";
   if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(extension))
     return "image";
-  if (["pdf", "docx", "doc"].includes(extension)) return "file";
+  if (["pdf", "docx", "doc", "txt"].includes(extension)) return "file";
 
   return "unknown";
 };

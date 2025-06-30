@@ -23,31 +23,48 @@ async function seedDatabase() {
 
   const verlogs = true;
 
-  const permisoAll = await db.Permiso.create({
-    nombre: "Admin",
-    vercategoria,
-    agcategoria,
-    edcategoria,
-    elcategoria,
-    verarchivo,
-    edarchivo,
-    elarchivo,
-    verusuario,
-    agusuario,
-    edusuario,
-    elusuario,
-    verpermiso,
-    agpermiso,
-    edpermiso,
-    elpermiso,
-    verlogs,
+  const existing00 = await db.Permiso.findOne({
+    where: { nombre: "Admin" },
   });
-  const permiso = await db.Permiso.create({ nombre: "Default" });
+
+  if (!existing00) {
+    await db.Permiso.create({
+      nombre: "Admin",
+      vercategoria,
+      agcategoria,
+      edcategoria,
+      elcategoria,
+      verarchivo,
+      edarchivo,
+      elarchivo,
+      verusuario,
+      agusuario,
+      edusuario,
+      elusuario,
+      verpermiso,
+      agpermiso,
+      edpermiso,
+      elpermiso,
+      verlogs,
+    });
+    console.log("Permiso creado");
+  } else {
+    console.log("Permiso ya existe");
+  }
+
+  const existing000 = await db.Permiso.findOne({
+    where: { nombre: "Default" },
+  });
+  if (!existing000) {
+    await db.Permiso.create({ nombre: "Default" });
+    console.log("Permiso creado");
+  } else {
+    console.log("Permiso ya existe");
+  }
 
   const existing0 = await db.Usuario.findOne({
     where: { email: "todo@demo.com" },
   });
-
   if (!existing0) {
     const hashedPassword = await bcrypt.hash("todo123", 10);
     await db.Usuario.create({
@@ -61,9 +78,51 @@ async function seedDatabase() {
     console.log("Usuario todo ya existe");
   }
 
-  const admin = await db.Categoria.create({ nombre: "Talleres" });
-  const editor = await db.Categoria.create({ nombre: "Investigación" });
-  const user = await db.Categoria.create({ nombre: "Docentes" });
+  const existing01 = await db.Usuario.findOne({
+    where: { email: "edit@demo.com" },
+  });
+  if (!existing01) {
+    const hashedPassword = await bcrypt.hash("edit123", 10);
+    await db.Usuario.create({
+      nombre: "Edit",
+      email: "edit@demo.com",
+      contraseña: hashedPassword,
+      permiso_id: 1,
+    });
+    console.log("Usuario todo creado");
+  } else {
+    console.log("Usuario todo ya existe");
+  }
+
+  const existing1 = await db.Categoria.findOne({
+    where: { nombre: "Talleres" },
+  });
+  if (!existing1) {
+    const admin = await db.Categoria.create({ nombre: "Talleres" });
+    console.log("Categoria creada");
+  } else {
+    console.log("Categoria ya existe");
+  }
+
+  const existing2 = await db.Categoria.findOne({
+    where: { nombre: "Investigación" },
+  });
+  if (!existing2) {
+    const editor = await db.Categoria.create({ nombre: "Investigación" });
+    console.log("Categoria creada");
+  } else {
+    console.log("Categoria ya existe");
+  }
+
+  const existing3 = await db.Categoria.findOne({
+    where: { nombre: "Docentes" },
+  });
+  if (!existing3) {
+    const user = await db.Categoria.create({ nombre: "Docentes" });
+    console.log("Categoria creada");
+  } else {
+    console.log("Categoria ya existe");
+  }
 }
 
 module.exports = seedDatabase;

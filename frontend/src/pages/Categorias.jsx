@@ -29,11 +29,13 @@ export default function Categorias({ permisos, setMessage, setTypeMessage }) {
   }, []);
 
   const toggleSelect = (cat) => {
-    if (selectedForSwap.some((item) => item.id === cat.id)) {
-      setSelectedForSwap(selectedForSwap.filter((c) => c.id !== cat.id));
-    } else {
-      if (selectedForSwap.length < 2) {
-        setSelectedForSwap([...selectedForSwap, cat]);
+    if (permisos?.edcategoria === true) {
+      if (selectedForSwap.some((item) => item.id === cat.id)) {
+        setSelectedForSwap(selectedForSwap.filter((c) => c.id !== cat.id));
+      } else {
+        if (selectedForSwap.length < 2) {
+          setSelectedForSwap([...selectedForSwap, cat]);
+        }
       }
     }
   };
@@ -186,7 +188,7 @@ export default function Categorias({ permisos, setMessage, setTypeMessage }) {
         <div className="listado">
           <div className="div-intercambio">
             <h3>Categorías</h3>
-            {selectedForSwap.length !== 0 && (
+            {permisos?.edcategoria === true && selectedForSwap.length !== 0 && (
               <button
                 onClick={() => {
                   setSelectedForSwap([]);
@@ -196,13 +198,18 @@ export default function Categorias({ permisos, setMessage, setTypeMessage }) {
               </button>
             )}
           </div>
-          <br />
-          <p>
-            Se intercambiaran las realciones:{" "}
-            {selectedForSwap.length === 0
-              ? "Sin seleccionar"
-              : selectedForSwap.map((p) => `"${p.nombre}"`).join(" hacia ")}
-          </p>
+          {permisos?.edcategoria === true && (
+            <>
+              <br />
+
+              <p>
+                Se intercambiaran las realciones:{" "}
+                {selectedForSwap.length === 0
+                  ? "Sin seleccionar"
+                  : selectedForSwap.map((p) => `"${p.nombre}"`).join(" hacia ")}
+              </p>
+            </>
+          )}
           {!(siguiente && anterior) && (
             <div className="div-paginar">
               <button

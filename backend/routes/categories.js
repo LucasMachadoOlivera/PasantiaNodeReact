@@ -132,34 +132,6 @@ router.get("/conCantidad", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-/*
-router.put("/:id", async (req, res, next) => {
-  const permisos = await obtenerPermisos(req.usuarioId);
-  const permitido = permisos.edcategoria;
-  if (permitido) {
-    next(); // Continúa con el siguiente
-  } else {
-    return res
-      .status(401)
-      .json({ message: "No se tiene permisos suficientes" });
-  }
-});
-
-// Actualizar una categoría
-router.put("/:id", async (req, res) => {
-  try {
-    const { nombre } = req.body;
-    const categoria = await db.Categoria.findByPk(req.params.id);
-    if (!categoria)
-      return res.status(404).json({ error: "Categoría no encontrada" });
-
-    categoria.nombre = nombre || categoria.nombre;
-    await categoria.save();
-    res.json(categoria);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});*/
 
 router.delete("/:id", async (req, res, next) => {
   const permisos = await obtenerPermisos(req.usuarioId);

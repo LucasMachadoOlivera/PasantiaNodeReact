@@ -2,6 +2,7 @@ module.exports = (sequelize, DataTypes) => {
   return sequelize.define("Permiso", {
     nombre: {
       type: DataTypes.STRING,
+      unique: true,
       allowNull: false,
     },
     vercategoria: {
