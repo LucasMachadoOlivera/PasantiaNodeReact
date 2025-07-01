@@ -78,22 +78,6 @@ async function seedDatabase() {
     console.log("Usuario todo ya existe");
   }
 
-  const existing01 = await db.Usuario.findOne({
-    where: { email: "edit@demo.com" },
-  });
-  if (!existing01) {
-    const hashedPassword = await bcrypt.hash("edit123", 10);
-    await db.Usuario.create({
-      nombre: "Edit",
-      email: "edit@demo.com",
-      contraseña: hashedPassword,
-      permiso_id: 1,
-    });
-    console.log("Usuario todo creado");
-  } else {
-    console.log("Usuario todo ya existe");
-  }
-
   const existing1 = await db.Categoria.findOne({
     where: { nombre: "Talleres" },
   });

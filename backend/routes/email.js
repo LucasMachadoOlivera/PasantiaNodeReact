@@ -35,8 +35,8 @@ function generarPassword(longitud = 10) {
   return password;
 }
 
-const emailPorpietario = "p30225241@gmail.com";
-const pass = "klaj ehny jxct eslb";
+const emailPorpietario = process.env.EMAIL_ADDRESS;
+const pass = process.env.EMAIL_APPLICATION_PASS;
 
 let transporter = nodemailer.createTransport({
   service: "gmail",
